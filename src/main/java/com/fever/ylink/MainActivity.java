@@ -153,7 +153,7 @@ public class MainActivity extends Activity {
 
     private void handleSendText(Intent intent) {
         final String sharedText = intent.getStringExtra(Intent.EXTRA_TEXT);
-        if (sharedText == null) {
+        if (sharedText == null || runOnFound != null) {
             return;
         }
         inpURL.setText(sharedText);
@@ -433,7 +433,7 @@ public class MainActivity extends Activity {
                     for (Integer i = 0; i < urlList.length(); i++) {
                         try {
                             JSONObject video = new JSONObject();
-                            String url = urlList.getString(i).trim();
+                            String url = urlList.getString(i).trim().replaceAll(",[^&]*","");
                             if (!url.contains("ratebypass")) {
                                 url += "&ratebypass=yes";
                             }
@@ -478,6 +478,7 @@ public class MainActivity extends Activity {
                             if (!url.contains("ratebypass")) {
                                 url += "&ratebypass=yes";
                             }
+                            url = url.replaceAll(",[^&]*","");
                             video.put("url", url);
                             video.put("itag", itagList.getString(i));
                             linkList.put(video);
