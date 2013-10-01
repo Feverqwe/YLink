@@ -396,7 +396,7 @@ public class MainActivity extends Activity {
                 videos += obj.getString("url_encoded_fmt_stream_map").trim();
             }
             if (obj.has("adaptive_fmts")) {
-                if ( videos.length() != 0 ) {
+                if (videos.length() != 0) {
                     videos += ",";
                 }
                 videos += obj.getString("adaptive_fmts").trim();
@@ -413,10 +413,18 @@ public class MainActivity extends Activity {
                 if (!new_obj.has("itag") || !new_obj.has("url")) {
                     continue;
                 }
-                if (new_obj.has("sig")) {
-                    String n_url = new_obj.getString("url").trim() + "&signature=" + new_obj.getString("sig").trim();
-                    new_obj.put("url", n_url);
+                if (new_obj.has("s")) {
+                    writeInStatus("Signature is encrypted!");
+                    continue;
                 }
+                String n_url = new_obj.getString("url").trim();
+                if (new_obj.has("sig")) {
+                    n_url += "&signature=" + new_obj.getString("sig").trim();
+                }
+                if (!n_url.contains("signature=")) {
+                    continue;
+                }
+                new_obj.put("url", n_url);
                 JSONArray n_it = video_obj.getJSONArray("itag");
                 n_it.put(new_obj.getString("itag"));
                 video_obj.put("itag", n_it);
@@ -432,32 +440,30 @@ public class MainActivity extends Activity {
         try {
             if (obj.has("url_encoded_fmt_stream_map")) {
                 JSONObject item = obj.getJSONObject("url_encoded_fmt_stream_map");
-                if (item.has("s") == Boolean.FALSE) {
-                    JSONArray urlList = new JSONArray();
-                    JSONArray itagList = new JSONArray();
-                    if (item.getString("url").trim().substring(0, 1).equals("[") == Boolean.FALSE) {
-                        urlList.put(item.getString("url").trim());
-                    } else {
-                        urlList = item.getJSONArray("url");
-                    }
-                    if (item.getString("itag").trim().substring(0, 1).equals("[") == Boolean.FALSE) {
-                        itagList.put(item.getString("itag").trim());
-                    } else {
-                        itagList = item.getJSONArray("itag");
-                    }
-                    for (Integer i = 0; i < urlList.length(); i++) {
-                        try {
-                            JSONObject video = new JSONObject();
-                            String url = urlList.getString(i).trim();
-                            if (!url.contains("ratebypass")) {
-                                url += "&ratebypass=yes";
-                            }
-                            video.put("url", url);
-                            video.put("itag", itagList.getString(i));
-                            linkList.put(video);
-                        } catch (JSONException e) {
-                            Log.d("YT_ReadCode", "JSONException 2!");
+                JSONArray urlList = new JSONArray();
+                JSONArray itagList = new JSONArray();
+                if (item.getString("url").trim().substring(0, 1).equals("[") == Boolean.FALSE) {
+                    urlList.put(item.getString("url").trim());
+                } else {
+                    urlList = item.getJSONArray("url");
+                }
+                if (item.getString("itag").trim().substring(0, 1).equals("[") == Boolean.FALSE) {
+                    itagList.put(item.getString("itag").trim());
+                } else {
+                    itagList = item.getJSONArray("itag");
+                }
+                for (Integer i = 0; i < urlList.length(); i++) {
+                    try {
+                        JSONObject video = new JSONObject();
+                        String url = urlList.getString(i).trim();
+                        if (!url.contains("ratebypass")) {
+                            url += "&ratebypass=yes";
                         }
+                        video.put("url", url);
+                        video.put("itag", itagList.getString(i));
+                        linkList.put(video);
+                    } catch (JSONException e) {
+                        Log.d("YT_ReadCode", "JSONException 2!");
                     }
                 }
             }
