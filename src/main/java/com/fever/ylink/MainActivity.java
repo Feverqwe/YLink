@@ -40,18 +40,19 @@ public class MainActivity extends Activity {
     private TextView inpURL = null;
     private Button btnClear = null;
     private Button btnPaste = null;
-    private Button btnOpen = null;
     private Button btnGetLink = null;
     private CheckBox inClipboard = null;
     private RadioGroup maxQuality = null;
     private CharSequence quality = null;
     private TextView statusBar = null;
     private ClipboardManager clipboard = null;
-    private Boolean debug = Boolean.FALSE;
     private String videoURL = "";
     private SharedPreferences preferences = null;
     private SharedPreferences.Editor editor = null;
-    private Boolean runOnFound = null;
+    private Boolean runOnFound = Boolean.TRUE;
+    private String onOpenText = "";
+
+    private Boolean debug = Boolean.FALSE;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,7 +65,6 @@ public class MainActivity extends Activity {
         inpURL = (TextView) findViewById(R.id.inpURL);
         btnClear = (Button) findViewById(R.id.btnClear);
         btnPaste = (Button) findViewById(R.id.btnPaste);
-        btnOpen = (Button) findViewById(R.id.btnOpen);
         btnGetLink = (Button) findViewById(R.id.btnGetLink);
         maxQuality = (RadioGroup) findViewById(R.id.mq);
         statusBar = (TextView) findViewById(R.id.statusBar);
@@ -122,12 +122,6 @@ public class MainActivity extends Activity {
                 getLink(inpURL.getText().toString());
             }
         });
-        btnOpen.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                openURL();
-            }
-        });
 
         Intent intent = getIntent();
         String action = intent.getAction();
@@ -153,13 +147,13 @@ public class MainActivity extends Activity {
 
     private void handleSendText(Intent intent) {
         final String sharedText = intent.getStringExtra(Intent.EXTRA_TEXT);
-        if (sharedText == null || runOnFound != null) {
+        if (sharedText == null || onOpenText == sharedText) {
             return;
         }
+        onOpenText = sharedText;
         inpURL.setText(sharedText);
         runOnUiThread(new Runnable() {
             public void run() {
-                runOnFound = Boolean.TRUE;
                 getLink(sharedText);
             }
         });
@@ -167,8 +161,8 @@ public class MainActivity extends Activity {
 
     private void getLink(String url) {
         if (debug && url.length() == 0) {
-            //url = "http://www.youtube.com/watch?v=SIEG0NMYbjE";
-            url = "http://video.yandex.ru/users/yacinema/view/287/";
+            url = "http://www.youtube.com/watch?v=SIEG0NMYbjE";
+            //url = "http://video.yandex.ru/users/yacinema/view/287/";
         }
         String id = getYouTubeID(url);
         Integer type = 1;
@@ -176,7 +170,6 @@ public class MainActivity extends Activity {
             id = getYandexVideoID(url);
             type = 2;
         }
-        Log.d("id", id);
         if (id.length() == 0) {
             writeInStatus("Can't get video ID from link!");
             return;
@@ -252,8 +245,7 @@ public class MainActivity extends Activity {
             }
             String pattern_gvl = "<video-location>(.*)</video-location>";
             line_gvl = line_gvl.replace("\n", "").replace("&amp;", "&").replaceAll(pattern_gvl, "$1");
-            videoURL = line_gvl;
-            addInClipboard(videoURL);
+            onGetVideoURL(line_gvl);
             writeInStatus("Found Yandex video!");
         }
     }
@@ -346,10 +338,9 @@ public class MainActivity extends Activity {
             } else {
                 if (keys2.indexOf(key) == -1) {
                     try {
-                        String val = obj.getString(key);
-                        JSONArray new_val = new JSONArray();
-                        new_val.put(val);
-                        obj.put(key, new_val);
+                        JSONArray val = new JSONArray();
+                        val.put(obj.getString(key));
+                        obj.put(key, val);
                         keys2.add(key);
                     } catch (JSONException e) {
                         Log.d("YT_ReadInfo", "JSONException 1!");
@@ -363,30 +354,13 @@ public class MainActivity extends Activity {
             } catch (UnsupportedEncodingException e) {
                 Log.d("YT_ReadInfo", "UnsupportedCharsetException!");
             }
-            String[] val_arr = value.replaceAll("[?&]{1}?([^&]*)", "&$1").split("&");
             try {
                 if (is_obj) {
-                    if (key.equals("url") || key.equals("ttsurl")) {
-                        obj.put(key, value);
-                    } else if (val_arr.length == 1) {
-                        obj.put(key, val_arr[0]);
-                    } else {
-                        Object val = YT_ReadInfo(val_arr);
-                        obj.put(key, val);
-                    }
+                    obj.put(key, value);
                 } else {
                     JSONArray val = obj.getJSONArray(key);
-                    if (key.equals("url") || key.equals("ttsurl")) {
-                        val.put(value);
-                        obj.put(key, val);
-                    } else if (val_arr.length == 1) {
-                        val.put(val_arr[0]);
-                        obj.put(key, val);
-                    } else {
-                        Object new_val = YT_ReadInfo(val_arr);
-                        val.put(new_val);
-                        obj.put(key, val);
-                    }
+                    val.put(value);
+                    obj.put(key, val);
                 }
             } catch (JSONException e) {
                 Log.d("YT_ReadInfo", "JSONException 4!");
@@ -396,75 +370,75 @@ public class MainActivity extends Activity {
     }
 
     private Boolean YT_ReadCode(String code) {
-        String[] arr = code.replaceAll("[?&]{1}?([^&]*)", "&$1").split("&");
+        String[] arr = code.replaceAll("[?&]?([^&]*)", "&$1").split("&");
         JSONObject obj = new JSONObject();
         try {
             obj.put("content", YT_ReadInfo(arr));
             obj = obj.getJSONObject("content");
-
         } catch (JSONException e) {
             Log.d("YT_ReadCode", "JSONException content!");
         }
         if (!obj.has("token")) {
-            Log.d("YT_ReadCode", "No token!");
+            if (debug) {
+                Log.d("YT_ReadCode", "No token!");
+            }
             return Boolean.FALSE;
         }
         if (obj.has("ypc_video_rental_bar_text") && !obj.has("author")) {
-            Log.d("YT_ReadCode", "rental video!");
+            if (debug) {
+                Log.d("YT_ReadCode", "rental video!");
+            }
             return Boolean.FALSE;
         }
-        JSONArray linkList = new JSONArray();
         try {
-            if (obj.has("adaptive_fmts")) {
-                JSONObject item = obj.getJSONObject("adaptive_fmts");
-                if (item.has("s") == Boolean.FALSE) {
-                    JSONArray urlList = new JSONArray();
-                    JSONArray itagList = new JSONArray();
-                    if (item.getString("url").trim().substring(0, 1).equals("[") == Boolean.FALSE) {
-                        urlList.put(item.getString("url").trim());
-                    } else {
-                        urlList = item.getJSONArray("url");
-                    }
-                    if (item.getString("itag").trim().substring(0, 1).equals("[") == Boolean.FALSE) {
-                        itagList.put(item.getString("itag").trim());
-                    } else {
-                        itagList = item.getJSONArray("itag");
-                    }
-                    for (Integer i = 0; i < urlList.length(); i++) {
-                        try {
-                            JSONObject video = new JSONObject();
-                            String url = urlList.getString(i).trim().replaceAll(",[^&]*","");
-                            if (!url.contains("ratebypass")) {
-                                url += "&ratebypass=yes";
-                            }
-                            video.put("url", url);
-                            video.put("itag", itagList.getString(i));
-                            linkList.put(video);
-                        } catch (JSONException e) {
-                            Log.d("YT_ReadCode", "JSONException 1!");
-                        }
-                    }
-                }
+            String videos = "";
+            if (obj.has("url_encoded_fmt_stream_map")) {
+                videos += obj.getString("url_encoded_fmt_stream_map").trim();
             }
+            if (obj.has("adaptive_fmts")) {
+                if ( videos.length() != 0 ) {
+                    videos += ",";
+                }
+                videos += obj.getString("adaptive_fmts").trim();
+            }
+            String[] video_arr = videos.split(",");
+            JSONObject video_obj = new JSONObject();
+            video_obj.put("itag", new JSONArray());
+            video_obj.put("url", new JSONArray());
+            for (Integer n = 0; n < video_arr.length; n++) {
+                String[] new_arr = video_arr[n].replaceAll("[?&]?([^&]*)", "&$1").split("&");
+                JSONObject new_obj = new JSONObject();
+                new_obj.put("content", YT_ReadInfo(new_arr));
+                new_obj = new_obj.getJSONObject("content");
+                if (!new_obj.has("itag") || !new_obj.has("url")) {
+                    continue;
+                }
+                if (new_obj.has("sig")) {
+                    String n_url = new_obj.getString("url").trim() + "&signature=" + new_obj.getString("sig").trim();
+                    new_obj.put("url", n_url);
+                }
+                JSONArray n_it = video_obj.getJSONArray("itag");
+                n_it.put(new_obj.getString("itag"));
+                video_obj.put("itag", n_it);
+                JSONArray n_ur = video_obj.getJSONArray("url");
+                n_ur.put(new_obj.getString("url"));
+                video_obj.put("url", n_ur);
+            }
+            obj.put("url_encoded_fmt_stream_map", video_obj);
         } catch (JSONException e) {
-            Log.d("YT_ReadCode", "JSONException p1!");
+            Log.d("YT_ReadCode", "JSONException videos!");
         }
+        JSONArray linkList = new JSONArray();
         try {
             if (obj.has("url_encoded_fmt_stream_map")) {
                 JSONObject item = obj.getJSONObject("url_encoded_fmt_stream_map");
                 if (item.has("s") == Boolean.FALSE) {
                     JSONArray urlList = new JSONArray();
-                    JSONArray sigList = new JSONArray();
                     JSONArray itagList = new JSONArray();
                     if (item.getString("url").trim().substring(0, 1).equals("[") == Boolean.FALSE) {
                         urlList.put(item.getString("url").trim());
                     } else {
                         urlList = item.getJSONArray("url");
-                    }
-                    if (item.getString("sig").trim().substring(0, 1).equals("[") == Boolean.FALSE) {
-                        sigList.put(item.getString("sig").trim());
-                    } else {
-                        sigList = item.getJSONArray("sig");
                     }
                     if (item.getString("itag").trim().substring(0, 1).equals("[") == Boolean.FALSE) {
                         itagList.put(item.getString("itag").trim());
@@ -474,11 +448,10 @@ public class MainActivity extends Activity {
                     for (Integer i = 0; i < urlList.length(); i++) {
                         try {
                             JSONObject video = new JSONObject();
-                            String url = urlList.getString(i).trim() + "&signature=" + sigList.getString(i).trim();
+                            String url = urlList.getString(i).trim();
                             if (!url.contains("ratebypass")) {
                                 url += "&ratebypass=yes";
                             }
-                            url = url.replaceAll(",[^&]*","");
                             video.put("url", url);
                             video.put("itag", itagList.getString(i));
                             linkList.put(video);
@@ -489,7 +462,7 @@ public class MainActivity extends Activity {
                 }
             }
         } catch (JSONException e) {
-            Log.d("YT_ReadCode", "JSONException p2!");
+            Log.d("YT_ReadCode", "JSONException p!");
         }
         Boolean lower = Boolean.FALSE;
         if (quality.equals("1080p")) {
@@ -500,8 +473,7 @@ public class MainActivity extends Activity {
                     for (Integer n = 0; n < itags.length; n++) {
                         if (itags[n].equals(item.getString("itag"))) {
                             writeInStatus("Found 1080p!");
-                            videoURL = item.getString("url");
-                            addInClipboard(videoURL);
+                            onGetVideoURL(item.getString("url"));
                             return Boolean.TRUE;
                         }
                     }
@@ -519,8 +491,7 @@ public class MainActivity extends Activity {
                     for (Integer n = 0; n < itags.length; n++) {
                         if (itags[n].equals(item.getString("itag"))) {
                             writeInStatus("Found 720p!");
-                            videoURL = item.getString("url");
-                            addInClipboard(videoURL);
+                            onGetVideoURL(item.getString("url"));
                             return Boolean.TRUE;
                         }
                     }
@@ -538,8 +509,7 @@ public class MainActivity extends Activity {
                     for (Integer n = 0; n < itags.length; n++) {
                         if (itags[n].equals(item.getString("itag"))) {
                             writeInStatus("Found 480p!");
-                            videoURL = item.getString("url");
-                            addInClipboard(videoURL);
+                            onGetVideoURL(item.getString("url"));
                             return Boolean.TRUE;
                         }
                     }
@@ -556,8 +526,7 @@ public class MainActivity extends Activity {
                     for (Integer n = 0; n < itags.length; n++) {
                         if (itags[n].equals(item.getString("itag"))) {
                             writeInStatus("Found Audio!");
-                            videoURL = item.getString("url");
-                            addInClipboard(videoURL);
+                            onGetVideoURL(item.getString("url"));
                             return Boolean.TRUE;
                         }
                     }
@@ -570,13 +539,13 @@ public class MainActivity extends Activity {
         return Boolean.FALSE;
     }
 
-    private void addInClipboard(String url) {
+    private void onGetVideoURL(String url) {
+        videoURL = url;
         if (inClipboard.isChecked()) {
             ClipData clip = ClipData.newPlainText("url", url);
             clipboard.setPrimaryClip(clip);
         }
         if (runOnFound) {
-            runOnFound = Boolean.FALSE;
             openURL();
         }
     }

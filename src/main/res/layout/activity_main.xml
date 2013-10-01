@@ -110,18 +110,10 @@
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Get Link"
+        android:text="Get Link and Open"
         android:id="@+id/btnGetLink"
         android:layout_below="@+id/mq"
         android:layout_centerHorizontal="true" />
-
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Open link"
-        android:id="@+id/btnOpen"
-        android:layout_alignTop="@+id/btnGetLink"
-        android:layout_toRightOf="@+id/btnGetLink" />
 
     <CheckBox
         android:layout_width="wrap_content"
