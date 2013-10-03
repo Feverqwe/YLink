@@ -197,14 +197,14 @@ public class MainActivity extends Activity {
                 try {
                     HttpResponse response = client.execute(request);
                     HttpEntity entity = response.getEntity();
-                    line = EntityUtils.toString(entity);
+                    line = EntityUtils.toString(entity).replace("\n", "");
                 } catch (IOException e) {
                     writeInStatus("Can't get video id!");
                     return;
                 }
                 String pattern = ".*/" + username + "/([^.]*).([0-9]*)/.*";
-                String video_id = line.replace("\n", "").replaceAll(pattern, "$1.$2");
-                if (video_id.length() > 0 & !video_id.equals(line)) {
+                String video_id = line.replaceAll(pattern, "$1.$2");
+                if (video_id.length() > 0 && !video_id.equals(line)) {
                     YA_getToken(username, video_id);
                 }
             }
@@ -557,15 +557,15 @@ public class MainActivity extends Activity {
     }
 
     private String getYouTubeID(String url) {
-        String pattern = ".*[?|&]{1}v=([^&]*).*";
-        String id = url.replaceAll(pattern, "$1");
+        String pattern = ".*youtu.*[?|&]{1}v=([^&]*).*";
+        String id = url.replace("\n","").replaceAll(pattern, "$1");
         if (id.equals(url)) return "";
         return id;
     }
 
     private String getYandexVideoID(String url) {
         String pattern = ".*video.yandex.*/users/([^/]*).*";
-        String id = url.replaceAll(pattern, "$1");
+        String id = url.replace("\n","").replaceAll(pattern, "$1");
         if (id.equals(url)) return "";
         return id;
     }
