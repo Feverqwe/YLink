@@ -334,6 +334,7 @@ public class MainActivity extends Activity {
         List<String> keys = new ArrayList<String>();
         List<String> keys2 = new ArrayList<String>();
         for (Integer i = 0; i < arr.length; i++) {
+            String item = arr[i];
             Integer pos = item.indexOf("=");
             if (pos == -1 && arr.length == 1) {
                 return item;
