@@ -52,7 +52,7 @@ public class MainActivity extends Activity {
     private Boolean runOnFound = Boolean.TRUE;
     private String onOpenText = "";
 
-    private Boolean debug = Boolean.FALSE;
+    private Boolean debug = Boolean.TRUE;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -160,8 +160,10 @@ public class MainActivity extends Activity {
     }
 
     private void getLink(String url) {
+        url = url.replaceAll("\r?\n", " ");
         if (debug && url.length() == 0) {
-            url = "http://www.youtube.com/watch?v=SIEG0NMYbjE";
+            url = "http://www.youtube.com/embed/VKPuXh9AKdg?wmode=opaque";
+            //url = "http://www.youtube.com/watch?v=SIEG0NMYbjE";
             //url = "http://video.yandex.ru/users/yacinema/view/287/";
         }
         String id = getYouTubeID(url);
@@ -173,6 +175,9 @@ public class MainActivity extends Activity {
         if (id.length() == 0) {
             writeInStatus("Can't get video ID from link!");
             return;
+        }
+        if (debug) {
+            Log.d("getLink", "ID:" + id);
         }
         if (type == 1) {
             GetYouTubeVideoLink(id);
@@ -251,6 +256,12 @@ public class MainActivity extends Activity {
     }
 
     private void GetYouTubeVideoLink(String id) {
+        try {
+        id = URLEncoder.encode(id, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            writeInStatus("Bad video id!");
+            return;
+        }
         YT_TryGetMeta(id, -1);
     }
 
@@ -322,8 +333,7 @@ public class MainActivity extends Activity {
         JSONObject obj = new JSONObject();
         List<String> keys = new ArrayList<String>();
         List<String> keys2 = new ArrayList<String>();
-        for (Integer i = 0; i < arr.length; i++) {
-            String item = arr[i];
+        for (String item : arr) {
             Integer pos = item.indexOf("=");
             if (pos == -1 && arr.length == 1) {
                 return item;
@@ -557,15 +567,16 @@ public class MainActivity extends Activity {
     }
 
     private String getYouTubeID(String url) {
-        String pattern = ".*youtu.*[?|&]{1}v=([^&]*).*";
-        String id = url.replace("\n","").replaceAll(pattern, "$1");
+        url = url.replace("/embed/","/?v=");
+        String pattern = ".*youtu.*[?|&]{1}v=([^&?]*).*";
+        String id = url.replaceAll(pattern, "$1");
         if (id.equals(url)) return "";
         return id;
     }
 
     private String getYandexVideoID(String url) {
         String pattern = ".*video.yandex.*/users/([^/]*).*";
-        String id = url.replace("\n","").replaceAll(pattern, "$1");
+        String id = url.replaceAll(pattern, "$1");
         if (id.equals(url)) return "";
         return id;
     }
