@@ -52,7 +52,7 @@ public class MainActivity extends Activity {
     private Boolean runOnFound = Boolean.TRUE;
     private String onOpenText = "";
 
-    private Boolean debug = Boolean.TRUE;
+    private Boolean debug = Boolean.FALSE;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
