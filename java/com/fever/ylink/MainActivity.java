@@ -59,7 +59,7 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        preferences = PreferenceManager.getDefaultSharedPreferences(getApplication());
         editor = preferences.edit();
 
         inpURL = (TextView) findViewById(R.id.inpURL);
@@ -140,6 +140,8 @@ public class MainActivity extends Activity {
             return;
         }
         Intent intent = new Intent();
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
         intent.setAction(android.content.Intent.ACTION_VIEW);
         intent.setDataAndType(Uri.parse(videoURL), "video/*");
         startActivity(intent);
@@ -147,7 +149,7 @@ public class MainActivity extends Activity {
 
     private void handleSendText(Intent intent) {
         final String sharedText = intent.getStringExtra(Intent.EXTRA_TEXT);
-        if (sharedText == null || onOpenText == sharedText) {
+        if (sharedText == null || onOpenText.equals(sharedText)) {
             return;
         }
         onOpenText = sharedText;
@@ -333,8 +335,7 @@ public class MainActivity extends Activity {
         JSONObject obj = new JSONObject();
         List<String> keys = new ArrayList<String>();
         List<String> keys2 = new ArrayList<String>();
-        for (Integer i = 0; i < arr.length; i++) {
-            String item = arr[i];
+        for (String item : arr) {
             Integer pos = item.indexOf("=");
             if (pos == -1 && arr.length == 1) {
                 return item;
@@ -416,8 +417,8 @@ public class MainActivity extends Activity {
             JSONObject video_obj = new JSONObject();
             video_obj.put("itag", new JSONArray());
             video_obj.put("url", new JSONArray());
-            for (Integer n = 0; n < video_arr.length; n++) {
-                String[] new_arr = video_arr[n].replaceAll("[?&]?([^&]*)", "&$1").split("&");
+            for (String item : video_arr) {
+                String[] new_arr = item.replaceAll("[?&]?([^&]*)", "&$1").split("&");
                 JSONObject new_obj = new JSONObject();
                 new_obj.put("content", YT_ReadInfo(new_arr));
                 new_obj = new_obj.getJSONObject("content");
@@ -487,8 +488,8 @@ public class MainActivity extends Activity {
             try {
                 for (Integer i = 0; i < linkList.length(); i++) {
                     JSONObject item = linkList.getJSONObject(i);
-                    for (Integer n = 0; n < itags.length; n++) {
-                        if (itags[n].equals(item.getString("itag"))) {
+                    for (String sub_item : itags) {
+                        if (sub_item.equals(item.getString("itag"))) {
                             writeInStatus("Found 1080p!");
                             onGetVideoURL(item.getString("url"));
                             return Boolean.TRUE;
@@ -505,8 +506,8 @@ public class MainActivity extends Activity {
             try {
                 for (Integer i = 0; i < linkList.length(); i++) {
                     JSONObject item = linkList.getJSONObject(i);
-                    for (Integer n = 0; n < itags.length; n++) {
-                        if (itags[n].equals(item.getString("itag"))) {
+                    for (String sub_item : itags) {
+                        if (sub_item.equals(item.getString("itag"))) {
                             writeInStatus("Found 720p!");
                             onGetVideoURL(item.getString("url"));
                             return Boolean.TRUE;
@@ -523,8 +524,8 @@ public class MainActivity extends Activity {
             try {
                 for (Integer i = 0; i < linkList.length(); i++) {
                     JSONObject item = linkList.getJSONObject(i);
-                    for (Integer n = 0; n < itags.length; n++) {
-                        if (itags[n].equals(item.getString("itag"))) {
+                    for (String sub_item : itags) {
+                        if (sub_item.equals(item.getString("itag"))) {
                             writeInStatus("Found 480p!");
                             onGetVideoURL(item.getString("url"));
                             return Boolean.TRUE;
@@ -540,8 +541,8 @@ public class MainActivity extends Activity {
             try {
                 for (Integer i = 0; i < linkList.length(); i++) {
                     JSONObject item = linkList.getJSONObject(i);
-                    for (Integer n = 0; n < itags.length; n++) {
-                        if (itags[n].equals(item.getString("itag"))) {
+                    for (String sub_item : itags) {
+                        if (sub_item.equals(item.getString("itag"))) {
                             writeInStatus("Found Audio!");
                             onGetVideoURL(item.getString("url"));
                             return Boolean.TRUE;
@@ -569,7 +570,7 @@ public class MainActivity extends Activity {
 
     private String getYouTubeID(String url) {
         url = url.replace("/embed/","/?v=");
-        String pattern = ".*youtu.*[?|&]{1}v=([^&?]*).*";
+        String pattern = ".*youtu.*[?|&]v=([^&?]*).*";
         String id = url.replaceAll(pattern, "$1");
         if (id.equals(url)) return "";
         return id;
