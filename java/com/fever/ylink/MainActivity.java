@@ -257,7 +257,7 @@ public class MainActivity extends Activity {
 
     private void GetYouTubeVideoLink(String id) {
         try {
-        id = URLEncoder.encode(id, "UTF-8");
+            id = URLEncoder.encode(id, "UTF-8");
         } catch (UnsupportedEncodingException e) {
             writeInStatus("Bad video id!");
             return;
@@ -333,7 +333,7 @@ public class MainActivity extends Activity {
         JSONObject obj = new JSONObject();
         List<String> keys = new ArrayList<String>();
         List<String> keys2 = new ArrayList<String>();
-        for (String item : arr) {
+        for (Integer i = 0; i < arr.length; i++) {
             Integer pos = item.indexOf("=");
             if (pos == -1 && arr.length == 1) {
                 return item;
