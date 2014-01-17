@@ -483,13 +483,26 @@ public class MainActivity extends Activity {
             Log.d("YT_ReadCode", "JSONException p!");
         }
         Boolean lower = Boolean.FALSE;
+        if (debug) {
+            try {
+                for (Integer i = 0; i < linkList.length(); i++) {
+                    JSONObject item = linkList.getJSONObject(i);
+                    Log.d("YT_ReadCode", "quality list: "+item.getString("itag"));
+                }
+            } catch (JSONException e) {
+                Log.d("YT_ReadCode", "JSONException debug!");
+            }
+        }
         if (quality.equals("1080p")) {
-            String[] itags = {"37", "46"};
+            String[] itags = {"37", "46", "96"};
             try {
                 for (Integer i = 0; i < linkList.length(); i++) {
                     JSONObject item = linkList.getJSONObject(i);
                     for (String sub_item : itags) {
                         if (sub_item.equals(item.getString("itag"))) {
+                            if (debug) {
+                                Log.d("YT_ReadCode", "quality is "+sub_item);
+                            }
                             writeInStatus("Found 1080p!");
                             onGetVideoURL(item.getString("url"));
                             return Boolean.TRUE;
@@ -502,12 +515,15 @@ public class MainActivity extends Activity {
             lower = Boolean.TRUE;
         }
         if (quality.equals("720p") || lower) {
-            String[] itags = {"22", "45"};
+            String[] itags = {"22", "45", "95", "120"};
             try {
                 for (Integer i = 0; i < linkList.length(); i++) {
                     JSONObject item = linkList.getJSONObject(i);
                     for (String sub_item : itags) {
                         if (sub_item.equals(item.getString("itag"))) {
+                            if (debug) {
+                                Log.d("YT_ReadCode", "quality is "+sub_item);
+                            }
                             writeInStatus("Found 720p!");
                             onGetVideoURL(item.getString("url"));
                             return Boolean.TRUE;
@@ -520,12 +536,15 @@ public class MainActivity extends Activity {
             lower = Boolean.TRUE;
         }
         if (quality.equals("480p") || lower) {
-            String[] itags = {"44", "35", "34", "43", "18"};
+            String[] itags = {"35", "44", "94", "34", "43", "93", "18", "92"};
             try {
                 for (Integer i = 0; i < linkList.length(); i++) {
                     JSONObject item = linkList.getJSONObject(i);
                     for (String sub_item : itags) {
                         if (sub_item.equals(item.getString("itag"))) {
+                            if (debug) {
+                                Log.d("YT_ReadCode", "quality is "+sub_item);
+                            }
                             writeInStatus("Found 480p!");
                             onGetVideoURL(item.getString("url"));
                             return Boolean.TRUE;
@@ -543,6 +562,9 @@ public class MainActivity extends Activity {
                     JSONObject item = linkList.getJSONObject(i);
                     for (String sub_item : itags) {
                         if (sub_item.equals(item.getString("itag"))) {
+                            if (debug) {
+                                Log.d("YT_ReadCode", "quality is "+sub_item);
+                            }
                             writeInStatus("Found Audio!");
                             onGetVideoURL(item.getString("url"));
                             return Boolean.TRUE;
