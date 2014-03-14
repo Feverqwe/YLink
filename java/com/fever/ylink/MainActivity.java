@@ -591,6 +591,9 @@ public class MainActivity extends Activity {
     }
 
     private String getYouTubeID(String url) {
+        if (url.indexOf( "youtu" ) == -1 && url.indexOf( "google" ) == -1) {
+            return "";
+        }
         Boolean fail = Boolean.FALSE;
         url = url.replace("/embed/","/?v=");
         String pattern = ".*youtu.*[?|&]v=([^&?]*).*";
@@ -603,12 +606,21 @@ public class MainActivity extends Activity {
             if (id.equals(url)) fail = Boolean.TRUE;
         }
         if (fail) {
+            fail = Boolean.FALSE;
+            pattern = ".*youtu.be/([^&]*).*";
+            id = url.replaceAll(pattern, "$1");
+            if (id.equals(url)) fail = Boolean.TRUE;
+        }
+        if (fail) {
             return "";
         }
         return id;
     }
 
     private String getYandexVideoID(String url) {
+        if (url.indexOf( "yandex" ) == -1) {
+            return "";
+        }
         String pattern = ".*video.yandex.*/users/([^/]*).*";
         String id = url.replaceAll(pattern, "$1");
         if (id.equals(url)) return "";
