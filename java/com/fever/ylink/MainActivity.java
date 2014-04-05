@@ -235,9 +235,9 @@ public class MainActivity extends Activity {
         String pattern = "<token>(.*)</token>";
         String token = line.replace("\n", "").replaceAll(pattern, "$1");
         if (token.length() > 0 & !token.equals(line)) {
-            String videoQuality = "m1280x720";
+            String videoQuality = "480p";
             if (quality.equals("480p")) {
-                videoQuality = "m450x334";
+                videoQuality = "sq";
             }
             String get_v_link_url = "http://streaming.video.yandex.ru/get-location/" + username + "/" + video_id + "/" + videoQuality + ".mp4?token=" + token;
             String line_gvl = "";
