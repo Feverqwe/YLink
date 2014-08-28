@@ -22,6 +22,7 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpHead;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
@@ -164,15 +165,20 @@ public class MainActivity extends Activity {
     private void getLink(String url) {
         url = url.replaceAll("\r?\n", " ");
         if (debug && url.length() == 0) {
-            url = "http://www.youtube.com/embed/VKPuXh9AKdg?wmode=opaque";
-            //url = "http://www.youtube.com/watch?v=SIEG0NMYbjE";
-            //url = "http://video.yandex.ru/users/yacinema/view/287/";
+            // url = "http://www.youtube.com/embed/VKPuXh9AKdg?wmode=opaque";
+            // url = "http://www.youtube.com/watch?v=SIEG0NMYbjE";
+            url = "http://video.yandex.ru/users/yacinema/view/287/";
+            // url = "http://video.yandex.ru/iframe/ya-events/o3khdh99xs.2236/";
         }
         String id = getYouTubeID(url);
         Integer type = 1;
         if (id.length() == 0) {
             id = getYandexVideoID(url);
             type = 2;
+            if (id.length() == 0) {
+                id = getNewYandexVideoID(url);
+                type = 3;
+            }
         }
         if (id.length() == 0) {
             writeInStatus("Can't get video ID from link!");
@@ -183,8 +189,14 @@ public class MainActivity extends Activity {
         }
         if (type == 1) {
             GetYouTubeVideoLink(id);
-        } else if (type == 2) {
+        } else
+        if (type == 2) {
             GetYandex(id, url);
+        } else
+        if (type == 3) {
+            String pattern = "/([^/]*)/.*";
+            String username = id.replaceAll(pattern, "$1");
+            newGetYandex(username, id);
         }
     }
 
@@ -209,14 +221,51 @@ public class MainActivity extends Activity {
                     writeInStatus("Can't get video id!");
                     return;
                 }
-                String pattern = ".*/" + username + "/([^.]*).([0-9]*)/.*";
-                String video_id = line.replaceAll(pattern, "$1.$2");
-                if (video_id.length() > 0 && !video_id.equals(line)) {
-                    YA_getToken(username, video_id);
-                }
+                newGetYandex(username, line);
             }
         });
         myThread.start();
+    }
+
+    private void newGetYandex(final String username, final String line) {
+        Thread myThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+            String pattern = ".*/" + username + "/([^.]*).([0-9]*)/.*";
+            String video_id = line.replaceAll(pattern, "$1.$2");
+            if (video_id.length() > 0 && !video_id.equals(line)) {
+                YA_getToken(username, video_id);
+            }
+            }
+        });
+        myThread.start();
+    }
+
+    private void YA_getVideoLink(String username, String video_id, String videoQuality, String token) {
+        String get_v_link_url = "http://streaming.video.yandex.ru/get-location/" + username + "/" + video_id + "/" + videoQuality + ".mp4?token=" + token;
+        String line_gvl = "";
+        HttpClient client = new DefaultHttpClient();
+        HttpGet request_gvl = new HttpGet(get_v_link_url);
+        try {
+            HttpResponse response_gvl = client.execute(request_gvl);
+            HttpEntity entity_gvl = response_gvl.getEntity();
+            line_gvl = EntityUtils.toString(entity_gvl);
+        } catch (IOException e) {
+            writeInStatus("Can't get video location!");
+            return;
+        }
+        String pattern_gvl = "<video-location>(.*)</video-location>";
+        line_gvl = line_gvl.replace("\n", "").replace("&amp;", "&").replaceAll(pattern_gvl, "$1");
+
+        if (videoQuality.equals("480p")) {
+            if (!urlAlive(line_gvl)) {
+                YA_getVideoLink(username, video_id, "sq", token);
+                return;
+            }
+        }
+
+        onGetVideoURL(line_gvl);
+        writeInStatus("Found Yandex video!");
     }
 
     private void YA_getToken(final String username, final String video_id) {
@@ -239,21 +288,7 @@ public class MainActivity extends Activity {
             if (quality.equals("480p")) {
                 videoQuality = "sq";
             }
-            String get_v_link_url = "http://streaming.video.yandex.ru/get-location/" + username + "/" + video_id + "/" + videoQuality + ".mp4?token=" + token;
-            String line_gvl = "";
-            try {
-                HttpGet request_gvl = new HttpGet(get_v_link_url);
-                HttpResponse response_gvl = client.execute(request_gvl);
-                HttpEntity entity_gvl = response_gvl.getEntity();
-                line_gvl = EntityUtils.toString(entity_gvl);
-            } catch (IOException e) {
-                writeInStatus("Can't get video location!");
-                return;
-            }
-            String pattern_gvl = "<video-location>(.*)</video-location>";
-            line_gvl = line_gvl.replace("\n", "").replace("&amp;", "&").replaceAll(pattern_gvl, "$1");
-            onGetVideoURL(line_gvl);
-            writeInStatus("Found Yandex video!");
+            YA_getVideoLink(username, video_id, videoQuality, token);
         }
     }
 
@@ -591,7 +626,7 @@ public class MainActivity extends Activity {
     }
 
     private String getYouTubeID(String url) {
-        if (url.indexOf( "youtu" ) == -1 && url.indexOf( "google" ) == -1) {
+        if (!url.contains( "youtu" ) && !url.contains( "google" )) {
             return "";
         }
         Boolean fail = Boolean.FALSE;
@@ -617,14 +652,36 @@ public class MainActivity extends Activity {
         return id;
     }
 
+
+    private String getNewYandexVideoID(String url) {
+        String pattern = ".*video.yandex.*/([^/]*)/([^.]*).([0-9]*).*";
+        String video_id = url.replaceAll(pattern, "/$1/$2.$3/");
+        return video_id;
+    }
+
     private String getYandexVideoID(String url) {
-        if (url.indexOf( "yandex" ) == -1) {
+        if (!url.contains( "yandex" )) {
             return "";
         }
         String pattern = ".*video.yandex.*/users/([^/]*).*";
         String id = url.replaceAll(pattern, "$1");
         if (id.equals(url)) return "";
         return id;
+    }
+
+    private boolean urlAlive(String url) {
+        HttpClient client = new DefaultHttpClient();
+        HttpHead request = new HttpHead(url);
+        try {
+            HttpResponse response = client.execute(request);
+            Integer status = response.getStatusLine().getStatusCode();
+            if (status >= 200 & status < 300) {
+                return  Boolean.TRUE;
+            }
+        } catch (IOException e) {
+            return Boolean.FALSE;
+        }
+        return Boolean.FALSE;
     }
 
     private void writeInStatus(final String text) {
