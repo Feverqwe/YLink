@@ -4,33 +4,24 @@ import android.app.Activity;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
-import android.widget.RadioButton;
-import android.widget.RadioGroup;
 import android.widget.TextView;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpHead;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.ArrayList;
@@ -39,17 +30,9 @@ import java.util.List;
 public class MainActivity extends Activity {
 
     private TextView inpURL = null;
-    private Button btnClear = null;
-    private Button btnPaste = null;
-    private Button btnGetLink = null;
-    private CheckBox inClipboard = null;
-    private RadioGroup maxQuality = null;
-    private CharSequence quality = null;
     private TextView statusBar = null;
     private ClipboardManager clipboard = null;
     private String videoURL = "";
-    private SharedPreferences preferences = null;
-    private SharedPreferences.Editor editor = null;
     private Boolean runOnFound = Boolean.TRUE;
     private String onOpenText = "";
 
@@ -58,45 +41,20 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        if (android.os.Build.VERSION.SDK_INT >= 21) {
+            setTheme(android.R.style.Theme_Material);
+        }
+
         setContentView(R.layout.activity_main);
 
-        preferences = PreferenceManager.getDefaultSharedPreferences(getApplication());
-        editor = preferences.edit();
-
         inpURL = (TextView) findViewById(R.id.inpURL);
-        btnClear = (Button) findViewById(R.id.btnClear);
-        btnPaste = (Button) findViewById(R.id.btnPaste);
-        btnGetLink = (Button) findViewById(R.id.btnGetLink);
-        maxQuality = (RadioGroup) findViewById(R.id.mq);
+        Button btnClear = (Button) findViewById(R.id.btnClear);
+        Button btnPaste = (Button) findViewById(R.id.btnPaste);
+        Button btnGetLink = (Button) findViewById(R.id.btnGetLink);
         statusBar = (TextView) findViewById(R.id.statusBar);
         clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
-        inClipboard = (CheckBox) findViewById(R.id.inBuffer);
 
-        inClipboard.setChecked(preferences.getBoolean("inClipboard", Boolean.FALSE));
-
-        quality = preferences.getString("quality", "720p");
-        for (Integer i = 0; i < maxQuality.getChildCount(); i++) {
-            Integer id = maxQuality.getChildAt(i).getId();
-            RadioButton rb = (RadioButton) findViewById(id);
-            if (rb.getText().equals(quality)) {
-                rb.setChecked(Boolean.TRUE);
-            }
-        }
-        inClipboard.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                editor.putBoolean("inClipboard", b); // value to store
-                editor.commit();
-            }
-        });
-        maxQuality.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(RadioGroup radioGroup, int i) {
-                RadioButton checked = (RadioButton) findViewById(i);
-                editor.putString("quality", checked.getText().toString()); // value to store
-                editor.commit();
-            }
-        });
         btnClear.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -109,16 +67,18 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View view) {
                 ClipData clip = clipboard.getPrimaryClip();
-                if (clip.getItemCount() > 0) {
-                    inpURL.setText(clip.getItemAt(0).getText());
+                if (clip == null || clip.getItemCount() == 0) {
+                    return;
                 }
+                Integer index = 0;
+                ClipData.Item item = clip.getItemAt(index);
+                String text = item.getText().toString();
+                inpURL.setText(text);
             }
         });
         btnGetLink.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                RadioButton checked = (RadioButton) findViewById(maxQuality.getCheckedRadioButtonId());
-                quality = checked.getText();
                 videoURL = "";
                 getLink(inpURL.getText().toString());
             }
@@ -166,20 +126,9 @@ public class MainActivity extends Activity {
         url = url.replaceAll("\r?\n", " ");
         if (debug && url.length() == 0) {
             // url = "http://www.youtube.com/embed/VKPuXh9AKdg?wmode=opaque";
-            // url = "http://www.youtube.com/watch?v=SIEG0NMYbjE";
-            url = "http://video.yandex.ru/users/yacinema/view/287/";
-            // url = "http://video.yandex.ru/iframe/ya-events/o3khdh99xs.2236/";
+            url = "https://www.youtube.com/watch?v=uAPZa6fOC_g";
         }
         String id = getYouTubeID(url);
-        Integer type = 1;
-        if (id.length() == 0) {
-            id = getYandexVideoID(url);
-            type = 2;
-            if (id.length() == 0) {
-                id = getNewYandexVideoID(url);
-                type = 3;
-            }
-        }
         if (id.length() == 0) {
             writeInStatus("Can't get video ID from link!");
             return;
@@ -187,109 +136,7 @@ public class MainActivity extends Activity {
         if (debug) {
             Log.d("getLink", "ID:" + id);
         }
-        if (type == 1) {
-            GetYouTubeVideoLink(id);
-        } else
-        if (type == 2) {
-            GetYandex(id, url);
-        } else
-        if (type == 3) {
-            String pattern = "/([^/]*)/.*";
-            String username = id.replaceAll(pattern, "$1");
-            newGetYandex(username, id);
-        }
-    }
-
-    private void GetYandex(final String username, String url) {
-        try {
-            url = "http://video.yandex.ru/oembed.xml?url=" + URLEncoder.encode(url, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            Log.d("GetYandex", "UnsupportedEncodingException!");
-        }
-        final String get_url = url;
-        Thread myThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                HttpClient client = new DefaultHttpClient();
-                HttpGet request = new HttpGet(get_url);
-                String line = "";
-                try {
-                    HttpResponse response = client.execute(request);
-                    HttpEntity entity = response.getEntity();
-                    line = EntityUtils.toString(entity).replace("\n", "");
-                } catch (IOException e) {
-                    writeInStatus("Can't get video id!");
-                    return;
-                }
-                newGetYandex(username, line);
-            }
-        });
-        myThread.start();
-    }
-
-    private void newGetYandex(final String username, final String line) {
-        Thread myThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-            String pattern = ".*/" + username + "/([^.]*).([0-9]*)/.*";
-            String video_id = line.replaceAll(pattern, "$1.$2");
-            if (video_id.length() > 0 && !video_id.equals(line)) {
-                YA_getToken(username, video_id);
-            }
-            }
-        });
-        myThread.start();
-    }
-
-    private void YA_getVideoLink(String username, String video_id, String videoQuality, String token) {
-        String get_v_link_url = "http://streaming.video.yandex.ru/get-location/" + username + "/" + video_id + "/" + videoQuality + ".mp4?token=" + token;
-        String line_gvl = "";
-        HttpClient client = new DefaultHttpClient();
-        HttpGet request_gvl = new HttpGet(get_v_link_url);
-        try {
-            HttpResponse response_gvl = client.execute(request_gvl);
-            HttpEntity entity_gvl = response_gvl.getEntity();
-            line_gvl = EntityUtils.toString(entity_gvl);
-        } catch (IOException e) {
-            writeInStatus("Can't get video location!");
-            return;
-        }
-        String pattern_gvl = "<video-location>(.*)</video-location>";
-        line_gvl = line_gvl.replace("\n", "").replace("&amp;", "&").replaceAll(pattern_gvl, "$1");
-
-        if (videoQuality.equals("480p")) {
-            if (!urlAlive(line_gvl)) {
-                YA_getVideoLink(username, video_id, "sq", token);
-                return;
-            }
-        }
-
-        onGetVideoURL(line_gvl);
-        writeInStatus("Found Yandex video!");
-    }
-
-    private void YA_getToken(final String username, final String video_id) {
-        String url = "http://static.video.yandex.net/get-token/" + username + "/" + video_id + "/";
-        HttpClient client = new DefaultHttpClient();
-        HttpGet request = new HttpGet(url);
-        String line = "";
-        try {
-            HttpResponse response = client.execute(request);
-            HttpEntity entity = response.getEntity();
-            line = EntityUtils.toString(entity);
-        } catch (IOException e) {
-            writeInStatus("Can't get token!");
-            return;
-        }
-        String pattern = "<token>(.*)</token>";
-        String token = line.replace("\n", "").replaceAll(pattern, "$1");
-        if (token.length() > 0 & !token.equals(line)) {
-            String videoQuality = "480p";
-            if (quality.equals("480p")) {
-                videoQuality = "sq";
-            }
-            YA_getVideoLink(username, video_id, videoQuality, token);
-        }
+        GetYouTubeVideoLink(id);
     }
 
     private void GetYouTubeVideoLink(String id) {
@@ -299,71 +146,57 @@ public class MainActivity extends Activity {
             writeInStatus("Bad video id!");
             return;
         }
-        YT_TryGetMeta(id, -1);
+        YT_TryGetMeta(id);
     }
 
-    private void YT_TryGetMeta(String id, Integer num) {
-        num += 1;
-        String[] type_page = {"spec", "&el=detailpage", "&el=vevo", "&el=embedded", ""};
-        if (num >= type_page.length) {
-            writeInStatus("Can't get meta info!");
-            return;
-        }
-        writeInStatus("Try get meta info! #" + num.toString());
-        if (debug) {
-            Log.d("YT_TryGetMeta", "Try get meta info! #" + num.toString());
-        }
-        if (num == 0) {
-            String url = "";
-            try {
-                url = "http://www.youtube.com/get_video_info?video_id=" + id + "&el=embedded&gl=US&hl=en&eurl=" + URLEncoder.encode("https://youtube.googleapis.com/v/" + id, "UTF-8") + "&asv=3&sts=1588";
-            } catch (java.io.UnsupportedEncodingException e) {
-                if (debug) {
-                    Log.d("YT_TryGetMeta", "Error encode! #" + num.toString());
-                }
-                YT_TryGetMeta(id, num);
-                return;
-            }
-            YT_GetMeta(url, id, num);
-        } else {
-            String url = "http://www.youtube.com/get_video_info?&video_id=" + id + type_page[num] + "&ps=default&eurl=&gl=US&hl=en";
-            YT_GetMeta(url, id, num);
-        }
-    }
-
-    private void YT_GetMeta(final String getURL, final String id, final Integer num) {
-        Thread myThread = new Thread(new Runnable() {
+    private void YT_TryGetMeta(final String id) {
+        new Thread(new Runnable() {
             @Override
             public void run() {
-                HttpClient client = new DefaultHttpClient();
-                HttpGet request = new HttpGet(getURL);
-                HttpResponse response = null;
-                try {
-                    response = client.execute(request);
-                } catch (IOException e) {
-                    if (debug) {
-                        Log.d("YT_GetMeta", "Error get " + getURL);
-                    }
-                    YT_TryGetMeta(id, num);
-                    return;
+                writeInStatus("Request video info");
+                if (debug) {
+                    Log.d("YT_TryGetMeta", "Request video info");
                 }
-                HttpEntity entity = response.getEntity();
-                String line = "";
+
+                final String eurl = "http%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3D" + id;
+                final String url = "http://www.youtube.com/get_video_info?&video_id=" + id + "&asv=3&eurl=" + eurl + "&el=info";
                 try {
-                    line = EntityUtils.toString(entity, "UTF-8");
-                } catch (IOException e) {
+                    YT_GetMeta(url);
+                } catch (Exception e) {
+                    writeInStatus("Get video info error! " + e.getMessage());
                     if (debug) {
-                        Log.d("YT_GetMeta", "Encode to UTF-8 error!");
+                        Log.d("YT_TryGetMeta", "Get video info error! " + e.toString());
                     }
-                    YT_TryGetMeta(id, num);
-                    return;
-                }
-                if (!YT_ReadCode(line)) {
-                    YT_TryGetMeta(id, num);
                 }
             }
-        });
-        myThread.start();
+        }).start();
+    }
+
+    private void YT_GetMeta(final String urlString) throws Exception {
+        StringBuffer contentBuffer = new StringBuffer("");
+
+        URL url = new URL(urlString);
+        HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+        try {
+            InputStream in = urlConnection.getInputStream();
+            BufferedReader rd = new BufferedReader(new InputStreamReader(in));
+
+            String line = "";
+            do {
+                line = rd.readLine();
+                if (line == null) {
+                    break;
+                }
+                contentBuffer.append(line);
+            } while (true);
+        } finally {
+            urlConnection.disconnect();
+        }
+
+        Boolean hasLinks = YT_ReadCode(contentBuffer.toString());
+        if (!hasLinks) {
+            throw new Exception("Links is not found!");
+        }
     }
 
     private Object YT_ReadInfo(String[] arr) {
@@ -517,7 +350,7 @@ public class MainActivity extends Activity {
         } catch (JSONException e) {
             Log.d("YT_ReadCode", "JSONException p!");
         }
-        Boolean lower = Boolean.FALSE;
+        Boolean lower = Boolean.TRUE;
         if (debug) {
             try {
                 for (Integer i = 0; i < linkList.length(); i++) {
@@ -528,7 +361,7 @@ public class MainActivity extends Activity {
                 Log.d("YT_ReadCode", "JSONException debug!");
             }
         }
-        if (quality.equals("1080p")) {
+        if (lower) { //1080
             String[] itags = {"37", "46", "96"};
             try {
                 for (Integer i = 0; i < linkList.length(); i++) {
@@ -549,7 +382,7 @@ public class MainActivity extends Activity {
             }
             lower = Boolean.TRUE;
         }
-        if (quality.equals("720p") || lower) {
+        if (lower) { // 720
             String[] itags = {"22", "45", "95", "120"};
             try {
                 for (Integer i = 0; i < linkList.length(); i++) {
@@ -570,7 +403,7 @@ public class MainActivity extends Activity {
             }
             lower = Boolean.TRUE;
         }
-        if (quality.equals("480p") || lower) {
+        if (lower) {
             String[] itags = {"35", "44", "94", "34", "43", "93", "18", "92"};
             try {
                 for (Integer i = 0; i < linkList.length(); i++) {
@@ -590,36 +423,12 @@ public class MainActivity extends Activity {
                 Log.d("YT_ReadCode", "JSONException 480p!");
             }
         }
-        if (quality.equals("Audio")) {
-            String[] itags = {"141", "140", "139"};
-            try {
-                for (Integer i = 0; i < linkList.length(); i++) {
-                    JSONObject item = linkList.getJSONObject(i);
-                    for (String sub_item : itags) {
-                        if (sub_item.equals(item.getString("itag"))) {
-                            if (debug) {
-                                Log.d("YT_ReadCode", "quality is "+sub_item);
-                            }
-                            writeInStatus("Found Audio!");
-                            onGetVideoURL(item.getString("url"));
-                            return Boolean.TRUE;
-                        }
-                    }
-                }
-            } catch (JSONException e) {
-                Log.d("YT_ReadCode", "JSONException Audio!");
-            }
-        }
         writeInStatus("Video not found!");
         return Boolean.FALSE;
     }
 
     private void onGetVideoURL(String url) {
         videoURL = url;
-        if (inClipboard.isChecked()) {
-            ClipData clip = ClipData.newPlainText("url", url);
-            clipboard.setPrimaryClip(clip);
-        }
         if (runOnFound) {
             openURL();
         }
@@ -650,38 +459,6 @@ public class MainActivity extends Activity {
             return "";
         }
         return id;
-    }
-
-
-    private String getNewYandexVideoID(String url) {
-        String pattern = ".*video.yandex.*/([^/]*)/([^.]*).([0-9]*).*";
-        String video_id = url.replaceAll(pattern, "/$1/$2.$3/");
-        return video_id;
-    }
-
-    private String getYandexVideoID(String url) {
-        if (!url.contains( "yandex" )) {
-            return "";
-        }
-        String pattern = ".*video.yandex.*/users/([^/]*).*";
-        String id = url.replaceAll(pattern, "$1");
-        if (id.equals(url)) return "";
-        return id;
-    }
-
-    private boolean urlAlive(String url) {
-        HttpClient client = new DefaultHttpClient();
-        HttpHead request = new HttpHead(url);
-        try {
-            HttpResponse response = client.execute(request);
-            Integer status = response.getStatusLine().getStatusCode();
-            if (status >= 200 & status < 300) {
-                return  Boolean.TRUE;
-            }
-        } catch (IOException e) {
-            return Boolean.FALSE;
-        }
-        return Boolean.FALSE;
     }
 
     private void writeInStatus(final String text) {

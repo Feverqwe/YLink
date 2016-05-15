@@ -15,10 +15,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/inpURL"
+        android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
         android:layout_toLeftOf="@+id/btnPaste"
-        android:layout_alignBottom="@+id/btnPaste"
-        android:layout_alignParentTop="true" />
+        android:layout_alignBottom="@+id/btnPaste" />
 
     <Button
         style="?android:attr/buttonStyleSmall"
@@ -38,77 +38,23 @@
         android:layout_alignParentTop="true"
         android:layout_toLeftOf="@+id/btnClear" />
 
-    <RadioGroup
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_below="@+id/statusBar"
-        android:layout_toRightOf="@+id/textView"
-        android:id="@+id/mq">
-
-
-        <RadioButton
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:text="1080p"
-            android:id="@+id/mq1080"
-            android:layout_below="@+id/inpURL"
-            android:layout_toRightOf="@+id/mq720" />
-
-        <RadioButton
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:text="720p"
-            android:id="@+id/mq720"
-            android:checked="true"
-            android:layout_below="@+id/inpURL"
-            android:layout_toRightOf="@+id/textView" />
-
-        <RadioButton
-            android:layout_width="wrap_content"
-            android:layout_height="fill_parent"
-            android:text="480p"
-            android:id="@+id/mq480"
-            android:layout_below="@+id/inpURL"
-            android:layout_toRightOf="@+id/textView" />
-
-    </RadioGroup>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Max quality:"
-        android:id="@+id/textView"
-        android:gravity="center_vertical"
-        android:layout_gravity="left|center_vertical"
-        android:layout_below="@+id/statusBar"
-        android:layout_alignParentLeft="true"
-        android:layout_alignBottom="@+id/mq" />
-
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/statusBar"
         android:text="Ready!"
+        android:textAlignment="center"
         android:layout_below="@+id/inpURL"
-        android:layout_alignParentLeft="true" />
+        android:layout_alignRight="@+id/btnClear" />
 
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Get Link and Open"
         android:id="@+id/btnGetLink"
-        android:layout_below="@+id/mq"
-        android:layout_centerHorizontal="true"
         android:focusable="false"
-        android:focusableInTouchMode="false" />
-
-    <CheckBox
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Add in clipboard"
-        android:id="@+id/inBuffer"
+        android:focusableInTouchMode="false"
         android:layout_below="@+id/statusBar"
-        android:layout_toRightOf="@+id/mq" />
+        android:layout_centerHorizontal="true" />
 
 </RelativeLayout>
