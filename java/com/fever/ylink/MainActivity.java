@@ -104,7 +104,7 @@ public class MainActivity extends Activity {
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
         intent.setAction(android.content.Intent.ACTION_VIEW);
-        intent.setDataAndType(Uri.parse(videoURL), "video/*");
+        intent.setDataAndType(Uri.parse(videoURL), "video/*.*");
         startActivity(intent);
     }
 
