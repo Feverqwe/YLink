@@ -34,7 +34,6 @@ public class MainActivity extends Activity {
     private ClipboardManager clipboard = null;
     private String videoURL = "";
     private Boolean runOnFound = Boolean.TRUE;
-    private String onOpenText = "";
 
     private Boolean debug = Boolean.FALSE;
 
@@ -83,15 +82,36 @@ public class MainActivity extends Activity {
                 getLink(inpURL.getText().toString());
             }
         });
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        Log.d("myApp", "onResume");
 
         Intent intent = getIntent();
-        String action = intent.getAction();
         String type = intent.getType();
-
-        if (Intent.ACTION_SEND.equals(action) && type != null) {
+        if (Intent.ACTION_SEND.equals(intent.getAction()) && type != null) {
             if ("text/plain".equals(type)) {
                 handleSendText(intent); // Handle text being sent
             }
+        }
+    }
+
+    private void handleSendText(Intent intent) {
+        final String sharedText = intent.getStringExtra(Intent.EXTRA_TEXT);
+        intent.removeExtra(Intent.EXTRA_TEXT);
+
+        Log.d("myApp", "handleSendText " + sharedText);
+
+        if (sharedText != null) {
+            inpURL.setText(sharedText);
+            runOnUiThread(new Runnable() {
+                public void run() {
+                    getLink(sharedText);
+                }
+            });
         }
     }
 
@@ -100,26 +120,10 @@ public class MainActivity extends Activity {
             writeInStatus("URL is empty!");
             return;
         }
-        Intent intent = new Intent();
+        Intent intent = new Intent(Intent.ACTION_VIEW);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-        intent.setAction(android.content.Intent.ACTION_VIEW);
-        intent.setDataAndType(Uri.parse(videoURL), "video/*.*");
-        startActivity(intent);
-    }
-
-    private void handleSendText(Intent intent) {
-        final String sharedText = intent.getStringExtra(Intent.EXTRA_TEXT);
-        if (sharedText == null || onOpenText.equals(sharedText)) {
-            return;
-        }
-        onOpenText = sharedText;
-        inpURL.setText(sharedText);
-        runOnUiThread(new Runnable() {
-            public void run() {
-                getLink(sharedText);
-            }
-        });
+        intent.setDataAndType(Uri.parse(videoURL), "video/*");
+        startActivity(intent.createChooser(intent, "Chose application"));
     }
 
     private void getLink(String url) {
