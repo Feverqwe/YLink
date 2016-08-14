@@ -114,7 +114,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initWebView() {
-        webView = new WebView(this);
+        webView = (WebView) findViewById(R.id.webView);
         webView.addJavascriptInterface(new JsObject(), "monoBridge");
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             webView.setWebContentsDebuggingEnabled(true);
