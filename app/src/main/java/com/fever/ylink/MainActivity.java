@@ -33,7 +33,7 @@ public class MainActivity extends AppCompatActivity {
     private WebView webView = null;
 
     private Integer callbackIndex = 0;
-    private List<Object[]> callbackStack = new ArrayList();
+    private List<Object[]> callbackStack = new ArrayList<>();
 
     private Boolean isReady = false;
     private String onReadyUrl = null;
