@@ -4,6 +4,7 @@ import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -86,6 +87,7 @@ public class MainActivity extends AppCompatActivity {
     private void onReady() {
         isReady = true;
         Log.d("myApp", "onReady");
+        writeInStatus("Ready!");
 
         if (onReadyUrl != null) {
             getUrlLinks(onReadyUrl);
@@ -113,7 +115,9 @@ public class MainActivity extends AppCompatActivity {
     private void initWebView() {
         webView = (WebView) findViewById(R.id.webView);
         webView.addJavascriptInterface(new JsObject(), "monoBridge");
-        webView.setWebContentsDebuggingEnabled(true);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            webView.setWebContentsDebuggingEnabled(true);
+        }
 
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
@@ -220,12 +224,16 @@ public class MainActivity extends AppCompatActivity {
                         "window.dispatchEvent(new CustomEvent(\"monoMessage\",{detail:'<'+JSON.stringify(message)}));" +
                         "})("+message+");";
 
-                webView.evaluateJavascript(script, new ValueCallback<String>() {
-                    @Override
-                    public void onReceiveValue(String s) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                    webView.evaluateJavascript(script, new ValueCallback<String>() {
+                        @Override
+                        public void onReceiveValue(String s) {
 
-                    }
-                });
+                        }
+                    });
+                } else {
+                    webView.loadUrl("javascript:" + script);
+                }
             }
         });
     }

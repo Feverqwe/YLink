@@ -43,7 +43,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/statusBar"
-        android:text="Ready!"
+        android:text="Loading"
         android:textAlignment="center"
         android:layout_below="@+id/inpURL"
         android:layout_alignRight="@+id/btnClear" />
