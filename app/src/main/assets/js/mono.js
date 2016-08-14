@@ -424,6 +424,295 @@ var mono = (typeof mono !== 'undefined') ? mono : undefined;
     return cb();
   };
 
+  /**
+   * @param {string} head
+   * @returns {Object}
+   */
+  mono.parseXhrHeader = function(head) {
+    head = head.split(/\r?\n/);
+    var headers = {};
+    head.forEach(function(line) {
+      "use strict";
+      var sep = line.indexOf(':');
+      if (sep === -1) {
+        return;
+      }
+      var key = line.substr(0, sep).trim().toLowerCase();
+      var value = line.substr(sep + 1).trim();
+      headers[key] = value;
+    });
+    return headers;
+  };
+
+  /**
+   * @typedef {Object|string} requestDetails
+   * @property {string} url
+   * @property {string} [method] GET|POST
+   * @property {string} [type] GET|POST
+   * @property {string} [data]
+   * @property {boolean} [cache]
+   * @property {Object} [headers]
+   * @property {string} [contentType]
+   * @property {boolean} [json]
+   * @property {boolean} [xml]
+   * @property {number} [timeout]
+   * @property {string} [mimeType]
+   * @property {boolean} [withCredentials]
+   * @property {boolean} [localXHR]
+   */
+  /**
+   * @callback requestResponse
+   * @param {string|null} err
+   * @param {Object} res
+   * @param {string|Object|Array} data
+   */
+  /**
+   * @param {requestDetails} obj
+   * @param {requestResponse} [origCb]
+   * @returns {{abort: function}}
+   */
+  mono.request = function(obj, origCb) {
+    "use strict";
+    var result = {};
+    var cb = function(e, body) {
+      cb = null;
+      if (request.timeoutTimer) {
+        clearTimeout(request.timeoutTimer);
+      }
+
+      var err = null;
+      if (e) {
+        err = String(e.message || e) || 'ERROR';
+      }
+      origCb && origCb(err, getResponse(body), body);
+    };
+
+    var getResponse = function(body) {
+      var response = {};
+
+      response.statusCode = xhr.status;
+      response.statusText = xhr.statusText;
+
+      var headers = null;
+      var allHeaders = xhr.getAllResponseHeaders();
+      if (typeof allHeaders === 'string') {
+        headers = mono.parseXhrHeader(allHeaders);
+      }
+      response.headers = headers || {};
+
+      response.body = body;
+
+      return response;
+    };
+
+    if (typeof obj !== 'object') {
+      obj = {url: obj};
+    }
+
+    var url = obj.url;
+
+    var method = obj.method || obj.type || 'GET';
+    method = method.toUpperCase();
+
+    var data = obj.data;
+    if (typeof data !== "string") {
+      data = mono.param(data);
+    }
+
+    if (data && method === 'GET') {
+      url += (/\?/.test(url) ? '&' : '?') + data;
+      data = undefined;
+    }
+
+    if (obj.cache === false && ['GET','HEAD'].indexOf(method) !== -1) {
+      url += (/\?/.test(url) ? '&' : '?') + '_=' + Date.now();
+    }
+
+    obj.headers = obj.headers || {};
+
+    if (data) {
+      obj.headers["Content-Type"] = obj.contentType || obj.headers["Content-Type"] || 'application/x-www-form-urlencoded; charset=UTF-8';
+    }
+
+    var request = {};
+    request.url = url;
+    request.method = method;
+
+    data && (request.data = data);
+    obj.json && (request.json = true);
+    obj.xml && (request.xml = true);
+    obj.timeout && (request.timeout = obj.timeout);
+    obj.mimeType && (request.mimeType = obj.mimeType);
+    obj.withCredentials && (request.withCredentials = true);
+    Object.keys(obj.headers).length && (request.headers = obj.headers);
+
+    if (request.timeout > 0) {
+      request.timeoutTimer = setTimeout(function() {
+        cb && cb(new Error('ETIMEDOUT'));
+        xhr.abort();
+      }, request.timeout);
+    }
+
+    var xhrSuccessStatus = {
+      0: 200,
+      1223: 204
+    };
+
+    var xhr = new XMLHttpRequest();
+    xhr.open(request.method, request.url, true);
+
+    if (request.mimeType) {
+      xhr.overrideMimeType(request.mimeType);
+    }
+    if (request.withCredentials) {
+      xhr.withCredentials = true;
+    }
+    for (var key in request.headers) {
+      xhr.setRequestHeader(key, request.headers[key]);
+    }
+
+    var readyCallback = xhr.onload = function() {
+      var status = xhrSuccessStatus[xhr.status] || xhr.status;
+      try {
+        if (status >= 200 && status < 300 || status === 304) {
+          var body = xhr.responseText;
+          if (request.json) {
+            body = JSON.parse(body);
+          } else
+          if (request.xml) {
+            body = (new DOMParser()).parseFromString(body, "text/xml");
+          } else
+          if (typeof body !== 'string') {
+            console.error('Response is not string!', body);
+            throw new Error('Response is not string!');
+          }
+          return cb && cb(null, body);
+        }
+        throw new Error(xhr.status + ' ' + xhr.statusText);
+      } catch (e) {
+        return cb && cb(e);
+      }
+    };
+
+    var errorCallback = xhr.onerror = function() {
+      cb && cb(new Error(xhr.status + ' ' + xhr.statusText));
+    };
+
+    var stateChange = null;
+    if (xhr.onabort !== undefined) {
+      xhr.onabort = errorCallback;
+    } else {
+      stateChange = function () {
+        if (xhr.readyState === 4) {
+          cb && setTimeout(function () {
+            return errorCallback();
+          });
+        }
+      };
+    }
+
+    if (stateChange) {
+      xhr.onreadystatechange = stateChange;
+    }
+
+    try {
+      xhr.send(request.data || null);
+    } catch (e) {
+      setTimeout(function() {
+        cb && cb(e);
+      });
+    }
+
+    result.abort = function() {
+      cb = null;
+      xhr.abort();
+    };
+
+    return result;
+  };
+
+  /**
+   * @param {requestDetails} obj
+   * @returns {Promise}
+   */
+  mono.requestPromise = function (obj) {
+    "use strict";
+    return new Promise(function (resolve, reject) {
+      var always = function (err, resp, data) {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(resp, data);
+        }
+      };
+
+      try {
+        mono.request(obj, always);
+      } catch (e) {
+        reject(e);
+      }
+    });
+  };
+
+  mono.param = function(obj) {
+    if (typeof obj === 'string') {
+      return obj;
+    }
+    var itemsList = [];
+    for (var key in obj) {
+      if (!obj.hasOwnProperty(key)) {
+        continue;
+      }
+      if (obj[key] === undefined || obj[key] === null) {
+        obj[key] = '';
+      }
+      itemsList.push(encodeURIComponent(key)+'='+encodeURIComponent(obj[key]));
+    }
+    return itemsList.join('&');
+  };
+
+  /**
+   * @param {string} url
+   * @param {Object} [details]
+   * @param {boolean} [details.params] Input params only [false]
+   * @param {string} [details.sep] Separator [&]
+   * @param {boolean} [details.noDecode] Disable decode keys [false]
+   * @returns {{}}
+   */
+  mono.parseUrl = function(url, details) {
+    details = details || {};
+    var query = null;
+    if (!details.params && /\?/.test(url)) {
+      query = url.match(/[^\?]+\?(.+)/)[1];
+    } else {
+      query = url;
+    }
+    var separator = details.sep || '&';
+    var dblParamList = query.split(separator);
+    var params = {};
+    for (var i = 0, len = dblParamList.length; i < len; i++) {
+      var item = dblParamList[i];
+      var keyValue = item.split('=');
+      var key = keyValue[0];
+      var value = keyValue[1] || '';
+      if (!details.noDecode) {
+        try {
+          key = decodeURIComponent(key);
+        } catch (err) {
+          key = unescape(key);
+        }
+        try {
+          params[key] = decodeURIComponent(value);
+        } catch (err) {
+          params[key] = unescape(value);
+        }
+      } else {
+        params[key] = value;
+      }
+    }
+    return params;
+  };
+
   //@insert
 
   return mono;

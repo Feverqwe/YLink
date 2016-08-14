@@ -155,10 +155,17 @@ public class MainActivity extends AppCompatActivity {
         }
         public void openUrl(JSONObject data, MyResponse response) throws JSONException {
             String url = data.getString("url");
+            String mime = "video/*.*";
+            /*
+            // todo: fix me!
+            if (data.has("mime")) {
+                mime = data.getString("mime");
+            }
+            */
+
             Intent intent = new Intent(Intent.ACTION_VIEW);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            // todo: fix mime!
-            intent.setDataAndType(Uri.parse(url), "video/*.*");
+            intent.setDataAndType(Uri.parse(url), mime);
             startActivity(intent.createChooser(intent, "Chose application"));
         }
     }
