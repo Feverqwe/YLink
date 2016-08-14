@@ -20,6 +20,7 @@ import android.widget.TextView;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -200,17 +201,15 @@ public class MainActivity extends AppCompatActivity {
                     response = new MyResponse(jsonObject);
                 }
 
-                if (data.get("action").equals("ping")) {
-                    onMessage.ping(data, response);
-                } else
-                if (data.get("action").equals("ready")) {
-                    onMessage.ready(data, response);
-                } else
-                if (data.get("action").equals("setStatus")) {
-                    onMessage.setStatus(data, response);
-                } else
-                if (data.get("action").equals("openUrl")) {
-                    onMessage.openUrl(data, response);
+                String action = data.getString("action");
+                try {
+                    Class[] cArg = new Class[2];
+                    cArg[0] = JSONObject.class;
+                    cArg[1] = MyResponse.class;
+                    Method method = onMessage.getClass().getMethod(action, cArg);
+                    method.invoke(onMessage, data, response);
+                } catch (Exception e) {
+                    Log.e("myApp", e.toString());
                 }
             }
         }
