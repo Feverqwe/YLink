@@ -27,12 +27,14 @@ public class MainActivity extends AppCompatActivity {
     private TextView inpURL = null;
     private TextView statusBar = null;
     private ClipboardManager clipboard = null;
-    private String videoURL = "";
 
     private WebView webView = null;
 
     private Integer callbackIndex = 0;
     private List<Object[]> callbackStack = new ArrayList();
+
+    private Boolean isReady = false;
+    private String onReadyUrl = null;
 
     interface MyCallback {
         void callbackCall(JSONObject json);
@@ -56,7 +58,6 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 inpURL.setText("");
                 statusBar.setText("");
-                videoURL = "";
             }
         });
         btnPaste.setOnClickListener(new View.OnClickListener() {
@@ -75,8 +76,7 @@ public class MainActivity extends AppCompatActivity {
         btnGetLink.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                videoURL = "";
-                // getLink(inpURL.getText().toString());
+                getUrlLinks(inpURL.getText().toString());
             }
         });
 
@@ -84,7 +84,30 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void onReady() {
-        Log.d("yLink", "Ready");
+        isReady = true;
+        Log.d("myApp", "onReady");
+
+        if (onReadyUrl != null) {
+            getUrlLinks(onReadyUrl);
+            onReadyUrl = null;
+        }
+    }
+
+    private void getUrlLinks(String url) {
+        if (!isReady) {
+            Log.d("myApp", "stackUrl: " + url);
+            onReadyUrl = url;
+            return;
+        }
+
+        try {
+            JSONObject message = new JSONObject();
+            message.put("action", "getVideoLink");
+            message.put("url", url);
+            bridgeSendMessage(message);
+        } catch (JSONException e) {
+            Log.e("onReady", e.toString());
+        }
     }
 
     private void initWebView() {
@@ -127,6 +150,17 @@ public class MainActivity extends AppCompatActivity {
         public void ready(JSONObject data, MyResponse response) {
             onReady();
         }
+        public void setStatus(JSONObject data, MyResponse response) throws JSONException {
+            writeInStatus(data.getString("text"));
+        }
+        public void openUrl(JSONObject data, MyResponse response) throws JSONException {
+            String url = data.getString("url");
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            // todo: fix mime!
+            intent.setDataAndType(Uri.parse(url), "video/*.*");
+            startActivity(intent.createChooser(intent, "Chose application"));
+        }
     }
 
     private OnMessage onMessage = new OnMessage();
@@ -157,10 +191,15 @@ public class MainActivity extends AppCompatActivity {
 
                 if (data.get("action").equals("ping")) {
                     onMessage.ping(data, response);
-                }
-
+                } else
                 if (data.get("action").equals("ready")) {
                     onMessage.ready(data, response);
+                } else
+                if (data.get("action").equals("setStatus")) {
+                    onMessage.setStatus(data, response);
+                } else
+                if (data.get("action").equals("openUrl")) {
+                    onMessage.openUrl(data, response);
                 }
             }
         }
@@ -210,8 +249,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onResume() {
         super.onResume();
-        Log.d("yLink", "onResume");
-
         Log.d("myApp", "onResume");
 
         Intent intent = getIntent();
@@ -231,24 +268,8 @@ public class MainActivity extends AppCompatActivity {
 
         if (sharedText != null) {
             inpURL.setText(sharedText);
-            // todo: change me!
-            /*runOnUiThread(new Runnable() {
-                public void run() {
-                    getLink(sharedText);
-                }
-            });*/
+            getUrlLinks(sharedText);
         }
-    }
-
-    private void openURL() {
-        if (videoURL.length() == 0) {
-            writeInStatus("URL is empty!");
-            return;
-        }
-        Intent intent = new Intent(Intent.ACTION_VIEW);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        intent.setDataAndType(Uri.parse(videoURL), "video/*");
-        startActivity(intent.createChooser(intent, "Chose application"));
     }
 
     private void writeInStatus(final String text) {
