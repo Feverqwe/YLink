@@ -388,25 +388,6 @@ var mono = (typeof mono !== 'undefined') ? mono : undefined;
           }
         };
 
-        api.onMessage.addListener(function(msg, response) {
-          if (msg) {
-            if (msg.get !== undefined) {
-              storage.get(msg.get, response);
-            } else
-            if (msg.set !== undefined) {
-              storage.set(msg.set, response);
-            } else
-            if (msg.remove !== undefined) {
-              storage.remove(msg.remove, response);
-            } else
-            if (msg.clear !== undefined) {
-              storage.clear(response);
-            }
-          }
-        }, {
-          hook: 'storage'
-        });
-
         return storage;
       };
 
