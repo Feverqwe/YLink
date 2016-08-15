@@ -227,7 +227,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 String script = "(function(message){" +
-                        "window.dispatchEvent(new CustomEvent(\"monoMessage\",{detail:'<'+JSON.stringify(message)}));" +
+                        "window.dispatchEvent(new CustomEvent('monoMessage',{detail:'<'+JSON.stringify(message)}));" +
                         "})("+message+");";
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
