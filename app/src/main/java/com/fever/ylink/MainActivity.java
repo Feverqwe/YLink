@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -154,7 +155,7 @@ public class MainActivity extends AppCompatActivity {
             } catch (JSONException e) {
                 Log.e("setMsg", e.toString());
             }
-            _bridgeSendMessage(message.toString());
+            _bridgeSendMessageWrapper(message.toString());
         }
     }
 
@@ -228,30 +229,46 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private  void _bridgeSendMessage(final String message) {
-        runOnUiThread(new Runnable() {
+        webView.post(new Runnable() {
             @Override
             public void run() {
-                webView.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        String script = "(function(message){" +
-                                "window.dispatchEvent(new CustomEvent(\"monoMessage\",{detail:'<'+JSON.stringify(message)}));" +
-                                "})("+message+");";
+                String script = "(function(message){" +
+                        "window.dispatchEvent(new CustomEvent(\"monoMessage\",{detail:'<'+JSON.stringify(message)}));" +
+                        "})("+message+");";
 
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                            webView.evaluateJavascript(script, new ValueCallback<String>() {
-                                @Override
-                                public void onReceiveValue(String s) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                    webView.evaluateJavascript(script, new ValueCallback<String>() {
+                        @Override
+                        public void onReceiveValue(String s) {
 
-                                }
-                            });
-                        } else {
-                            webView.loadUrl("javascript:" + script);
                         }
-                    }
-                });
+                    });
+                } else {
+                    webView.loadUrl("javascript:" + script);
+                }
             }
         });
+    }
+
+    private Boolean isMainThread() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            return Looper.getMainLooper().isCurrentThread();
+        } else {
+            return Thread.currentThread() == Looper.getMainLooper().getThread();
+        }
+    }
+
+    private void _bridgeSendMessageWrapper(final String message) {
+        if (isMainThread()) {
+            _bridgeSendMessage(message);
+        } else {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    _bridgeSendMessage(message);
+                }
+            });
+        }
     }
 
     private void bridgeSendMessage(final JSONObject data) throws JSONException {
@@ -274,7 +291,7 @@ public class MainActivity extends AppCompatActivity {
             message.put("hasCallback", false);
         }
 
-        _bridgeSendMessage(message.toString());
+        _bridgeSendMessageWrapper(message.toString());
     }
 
     @Override
