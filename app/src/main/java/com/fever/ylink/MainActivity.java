@@ -189,75 +189,67 @@ public class MainActivity extends AppCompatActivity {
 
     private OnMessage onMessage = new OnMessage();
 
-    private void routeMessage(String message) throws JSONException {
-        JSONObject jsonObject = new JSONObject(message);
-        JSONObject data = jsonObject.getJSONObject("data");
-
-        if (jsonObject.has("responseId")) {
-            Integer id = jsonObject.getInt("responseId");
-            for (int i = 0; i < callbackStack.size(); i++) {
-                Object[] item = callbackStack.get(i);
-                Integer cbId = (Integer) item[0];
-                if (cbId.equals(id)) {
-                    MyCallback cb = (MyCallback) item[1];
-                    cb.callbackCall(data);
-                    callbackStack.remove(i);
-                    break;
-                }
-            }
-        } else {
-            MyResponse response = null;
-            if (jsonObject.has("callbackId")) {
-                response = new MyResponse(jsonObject);
-            }
-
-            String action = data.getString("action");
-            try {
-                Class[] cArg = new Class[2];
-                cArg[0] = JSONObject.class;
-                cArg[1] = MyResponse.class;
-                Method method = onMessage.getClass().getMethod(action, cArg);
-                method.invoke(onMessage, data, response);
-            } catch (Exception e) {
-                Log.e("myApp", e.toString());
-            }
-        }
-    }
-
     public class JsObject {
         @JavascriptInterface
-        public void sendMessage(final String message) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        routeMessage(message);
-                    } catch (Exception e) {
-                        Log.e("myApp", e.toString());
+        public void sendMessage(String message) throws JSONException {
+            JSONObject jsonObject = new JSONObject(message);
+            JSONObject data = jsonObject.getJSONObject("data");
+
+            if (jsonObject.has("responseId")) {
+                Integer id = jsonObject.getInt("responseId");
+                for (int i = 0; i < callbackStack.size(); i++) {
+                    Object[] item = callbackStack.get(i);
+                    Integer cbId = (Integer) item[0];
+                    if (cbId.equals(id)) {
+                        MyCallback cb = (MyCallback) item[1];
+                        cb.callbackCall(data);
+                        callbackStack.remove(i);
+                        break;
                     }
                 }
-            });
+            } else {
+                MyResponse response = null;
+                if (jsonObject.has("callbackId")) {
+                    response = new MyResponse(jsonObject);
+                }
+
+                String action = data.getString("action");
+                try {
+                    Class[] cArg = new Class[2];
+                    cArg[0] = JSONObject.class;
+                    cArg[1] = MyResponse.class;
+                    Method method = onMessage.getClass().getMethod(action, cArg);
+                    method.invoke(onMessage, data, response);
+                } catch (Exception e) {
+                    Log.e("myApp", e.toString());
+                }
+            }
         }
     }
 
     private  void _bridgeSendMessage(final String message) {
-        webView.post(new Runnable() {
+        runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                String script = "(function(message){" +
-                        "window.dispatchEvent(new CustomEvent(\"monoMessage\",{detail:'<'+JSON.stringify(message)}));" +
-                        "})("+message+");";
+                webView.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        String script = "(function(message){" +
+                                "window.dispatchEvent(new CustomEvent(\"monoMessage\",{detail:'<'+JSON.stringify(message)}));" +
+                                "})("+message+");";
 
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                    webView.evaluateJavascript(script, new ValueCallback<String>() {
-                        @Override
-                        public void onReceiveValue(String s) {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                            webView.evaluateJavascript(script, new ValueCallback<String>() {
+                                @Override
+                                public void onReceiveValue(String s) {
 
+                                }
+                            });
+                        } else {
+                            webView.loadUrl("javascript:" + script);
                         }
-                    });
-                } else {
-                    webView.loadUrl("javascript:" + script);
-                }
+                    }
+                });
             }
         });
     }
