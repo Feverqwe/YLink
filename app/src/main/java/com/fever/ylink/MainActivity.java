@@ -37,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
     private List<Object[]> callbackStack = new ArrayList<>();
 
     private Boolean isReady = false;
-    private String onReadyUrl = null;
+    private List<String> onReadyMessageStack = new ArrayList<>();
 
     interface MyCallback {
         void callbackCall(JSONObject json);
@@ -50,72 +50,41 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         inpURL = (TextView) findViewById(R.id.inpURL);
+        statusBar = (TextView) findViewById(R.id.statusBar);
+        clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+
         Button btnClear = (Button) findViewById(R.id.btnClear);
         Button btnPaste = (Button) findViewById(R.id.btnPaste);
         Button btnGetLink = (Button) findViewById(R.id.btnGetLink);
-        statusBar = (TextView) findViewById(R.id.statusBar);
-        clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
 
         btnClear.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 inpURL.setText("");
-                setStatusText("");
+                destroyWebView();
             }
         });
         btnPaste.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 ClipData clip = clipboard.getPrimaryClip();
-                if (clip == null || clip.getItemCount() == 0) {
-                    return;
+                if (clip != null && clip.getItemCount() != 0) {
+                    Integer index = 0;
+                    ClipData.Item item = clip.getItemAt(index);
+                    String text = item.getText().toString();
+                    inpURL.setText(text);
                 }
-                Integer index = 0;
-                ClipData.Item item = clip.getItemAt(index);
-                String text = item.getText().toString();
-                inpURL.setText(text);
             }
         });
         btnGetLink.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                setStatusText("Loading");
                 getUrlLinks(inpURL.getText().toString());
             }
         });
     }
 
-    private void onReady() {
-        isReady = true;
-        Log.d("myApp", "onReady");
-        setStatusText("Ready!");
-
-        if (onReadyUrl != null) {
-            getUrlLinks(onReadyUrl);
-            onReadyUrl = null;
-        }
-    }
-
-    private void destroyWebView() {
-        Log.d("myApp", "destroyWebView");
-        if (webView != null) {
-            webView.destroy();
-            webView = null;
-        }
-        isReady = false;
-        setStatusText("Sleep");
-    }
-
     private void getUrlLinks(String url) {
-        if (!isReady) {
-            Log.d("myApp", "stackUrl: " + url);
-            onReadyUrl = url;
-            if (webView == null) {
-                initWebView();
-            }
-            return;
-        }
-
         try {
             JSONObject message = new JSONObject();
             message.put("action", "getVideoLink");
@@ -127,6 +96,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initWebView() {
+        setStatusText("Loading");
         webView = new WebView(this);
         webView.addJavascriptInterface(new JsObject(), "monoBridge");
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
@@ -157,6 +127,30 @@ public class MainActivity extends AppCompatActivity {
             }
             _bridgeSendMessageWrapper(message.toString());
         }
+    }
+
+    private void onReady() {
+        Log.d("myApp", "onReady");
+        isReady = true;
+
+        for (String message:onReadyMessageStack) {
+            _bridgeSendMessageWrapper(message);
+        }
+        onReadyMessageStack.clear();
+
+        setStatusText("Ready!");
+    }
+
+    private void destroyWebView() {
+        Log.d("myApp", "destroyWebView");
+        if (webView != null) {
+            webView.destroy();
+            webView = null;
+        }
+        callbackStack.clear();
+        isReady = false;
+
+        setStatusText("Sleep");
     }
 
     private class OnMessage {
@@ -259,6 +253,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void _bridgeSendMessageWrapper(final String message) {
+        if (!isReady) {
+            Log.d("myApp", "isStack: " + message);
+            onReadyMessageStack.add(message);
+            if (webView == null) {
+                initWebView();
+            }
+        } else
         if (isMainThread()) {
             _bridgeSendMessage(message);
         } else {
