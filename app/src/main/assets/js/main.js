@@ -237,9 +237,7 @@ var main = {
             console.log('myApp msg: ' + JSON.stringify(msg));
 
             if (_this[msg.action]) {
-                _this[msg.action](msg).then(function (links) {
-                    console.error('myApp links: ' + JSON.stringify(links));
-                }).catch(function (e) {
+                _this[msg.action](msg).catch(function (e) {
                     console.error('myApp error! ' + e.message);
                     mono.sendMessage({
                         action: 'setStatus',

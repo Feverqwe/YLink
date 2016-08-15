@@ -59,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 inpURL.setText("");
-                statusBar.setText("");
+                setStatusText("");
             }
         });
         btnPaste.setOnClickListener(new View.OnClickListener() {
@@ -78,17 +78,16 @@ public class MainActivity extends AppCompatActivity {
         btnGetLink.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                setStatusText("Loading");
                 getUrlLinks(inpURL.getText().toString());
             }
         });
-
-        initWebView();
     }
 
     private void onReady() {
         isReady = true;
         Log.d("myApp", "onReady");
-        writeInStatus("Ready!");
+        setStatusText("Ready!");
 
         if (onReadyUrl != null) {
             getUrlLinks(onReadyUrl);
@@ -96,10 +95,23 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void destroyWebView() {
+        Log.d("myApp", "destroyWebView");
+        if (webView != null) {
+            webView.destroy();
+            webView = null;
+        }
+        isReady = false;
+        setStatusText("Sleep");
+    }
+
     private void getUrlLinks(String url) {
         if (!isReady) {
             Log.d("myApp", "stackUrl: " + url);
             onReadyUrl = url;
+            if (webView == null) {
+                initWebView();
+            }
             return;
         }
 
@@ -114,7 +126,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initWebView() {
-        webView = (WebView) findViewById(R.id.webView);
+        webView = new WebView(this);
         webView.addJavascriptInterface(new JsObject(), "monoBridge");
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             webView.setWebContentsDebuggingEnabled(true);
@@ -156,7 +168,7 @@ public class MainActivity extends AppCompatActivity {
             onReady();
         }
         public void setStatus(JSONObject data, MyResponse response) throws JSONException {
-            writeInStatus(data.getString("text"));
+            setStatusText(data.getString("text"));
         }
         public void openUrl(JSONObject data, MyResponse response) throws JSONException {
             String url = data.getString("url");
@@ -177,41 +189,54 @@ public class MainActivity extends AppCompatActivity {
 
     private OnMessage onMessage = new OnMessage();
 
-    public class JsObject {
-        @JavascriptInterface
-        public void sendMessage(String message) throws JSONException {
-            JSONObject jsonObject = new JSONObject(message);
-            JSONObject data = jsonObject.getJSONObject("data");
+    private void routeMessage(String message) throws JSONException {
+        JSONObject jsonObject = new JSONObject(message);
+        JSONObject data = jsonObject.getJSONObject("data");
 
-            if (jsonObject.has("responseId")) {
-                Integer id = jsonObject.getInt("responseId");
-                for (int i = 0; i < callbackStack.size(); i++) {
-                    Object[] item = callbackStack.get(i);
-                    Integer cbId = (Integer)item[0];
-                    if (cbId.equals(id)) {
-                        MyCallback cb = (MyCallback)item[1];
-                        cb.callbackCall(data);
-                        callbackStack.remove(i);
-                        break;
-                    }
-                }
-            } else {
-                MyResponse response = null;
-                if (jsonObject.has("callbackId")) {
-                    response = new MyResponse(jsonObject);
-                }
-
-                String action = data.getString("action");
-                try {
-                    Class[] cArg = new Class[2];
-                    cArg[0] = JSONObject.class;
-                    cArg[1] = MyResponse.class;
-                    Method method = onMessage.getClass().getMethod(action, cArg);
-                    method.invoke(onMessage, data, response);
-                } catch (Exception e) {
-                    Log.e("myApp", e.toString());
+        if (jsonObject.has("responseId")) {
+            Integer id = jsonObject.getInt("responseId");
+            for (int i = 0; i < callbackStack.size(); i++) {
+                Object[] item = callbackStack.get(i);
+                Integer cbId = (Integer) item[0];
+                if (cbId.equals(id)) {
+                    MyCallback cb = (MyCallback) item[1];
+                    cb.callbackCall(data);
+                    callbackStack.remove(i);
+                    break;
                 }
             }
+        } else {
+            MyResponse response = null;
+            if (jsonObject.has("callbackId")) {
+                response = new MyResponse(jsonObject);
+            }
+
+            String action = data.getString("action");
+            try {
+                Class[] cArg = new Class[2];
+                cArg[0] = JSONObject.class;
+                cArg[1] = MyResponse.class;
+                Method method = onMessage.getClass().getMethod(action, cArg);
+                method.invoke(onMessage, data, response);
+            } catch (Exception e) {
+                Log.e("myApp", e.toString());
+            }
+        }
+    }
+
+    public class JsObject {
+        @JavascriptInterface
+        public void sendMessage(final String message) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        routeMessage(message);
+                    } catch (Exception e) {
+                        Log.e("myApp", e.toString());
+                    }
+                }
+            });
         }
     }
 
@@ -274,6 +299,13 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    protected void onStop() {
+        super.onStop();  // Always call the superclass method first
+
+        destroyWebView();
+    }
+
     private void handleSendText(Intent intent) {
         final String sharedText = intent.getStringExtra(Intent.EXTRA_TEXT);
         intent.removeExtra(Intent.EXTRA_TEXT);
@@ -286,7 +318,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void writeInStatus(final String text) {
+    private void setStatusText(final String text) {
         runOnUiThread(new Runnable() {
             public void run() {
                 statusBar.setText(text);
