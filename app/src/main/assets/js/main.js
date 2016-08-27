@@ -179,8 +179,81 @@ var main = {
             });
         };
     })(),
-    getYtVideoId: function (url) {
-        var id =  null;
+    getTwitchVideoUrl: (function () {
+        var getToken = function (info, type) {
+            var url = 'https://api.twitch.tv';
+            if (type === 'live') {
+                url += '/api/channels/'+info.channel;
+            } else {
+                url += '/api/vods/' + info.id;
+            }
+            url += '/access_token.json';
+
+            return mono.requestPromise({
+                url: url,
+                json: true
+            }).then(function (response) {
+                var json = response.body;
+                return {
+                    sig: json.sig,
+                    token: json.token
+                }
+            });
+        };
+        var getHlsStreams = function (info, type, _params) {
+            var url = 'http://usher.twitch.tv';
+            if (type === 'live') {
+                url += '/api/channel/hls/' + info.channel + '.m3u8';
+            } else {
+                url += '/vod/' + info.id;
+            }
+
+            var params = {
+                player: 'twitchweb',
+                p: parseInt(Math.random() * 1000000),
+                type: 'any',
+                allow_source: true,
+                allow_audio_only: true,
+                allow_spectre: false
+            };
+            mono.extend(params, _params);
+
+            url += '?' + mono.param(params);
+
+            return url;
+        };
+        return function (info) {
+            var promise = null;
+            if (info.id) {
+                if (info.videoType === 'v') {
+                    promise = getToken(info, 'video').then(function (auth) {
+                        console.log('myApp auth: ' + JSON.stringify(auth));
+
+                        return getHlsStreams(info, 'video', {
+                            nauthsig: auth.sig,
+                            nauth: auth.token
+                        });
+                    });
+                } else {
+                    // todo: implement me!
+                    throw new Error("Video type " + info.videoType + " not supported!");
+                }
+            } else {
+                promise = getToken(info, 'live').then(function (auth) {
+                    console.log('myApp auth: ' + JSON.stringify(auth));
+
+                    return getHlsStreams(info, 'live', {
+                        sig: auth.sig,
+                        token: auth.token
+                    });
+                });
+            }
+            return promise;
+        };
+    })(),
+    getUrlInfo: function (url) {
+        var result = {};
+
         [
             /\/\/(?:[^\/]+\.)?youtu\.be\/([\w\-]+)/,
             /\/\/(?:[^\/]+\.)?youtube\.com\/.+[?&]v=([\w\-]+)/,
@@ -188,26 +261,32 @@ var main = {
         ].some(function (re) {
             var m = re.exec(url);
             if (m) {
-                id = m[1];
+                result.type = 'youtube';
+                result.id = m[1];
                 return true;
             }
         });
-        return id;
+
+        [
+            /(\/\/(?:[^\/]+\.)?twitch\.tv\/(\w+)(?:\/(v)\/(\d+))?)/
+        ].some(function (re) {
+            var m = re.exec(url);
+            if (m) {
+                result.type = 'twitch';
+                result.url = m[1];
+                result.channel = m[2];
+                result.videoType = m[3];
+                result.id = m[4];
+                return true;
+            }
+        });
+
+        return result;
     },
-    getVideoLink: function (msg) {
-        var _this = this;
-        return Promise.try(function () {
-            var url = msg.url;
-            if (!url) {
-                throw new Error("Url is empty!");
-            }
-
-            var id = _this.getYtVideoId(url);
-            if (!id) {
-                throw new Error("VideoId is not found!");
-            }
-
-            return _this.getYtMeta(id).then(function (config) {
+    service: {
+        youtube: function (info) {
+            var _this = main;
+            return _this.getYtMeta(info.id).then(function (config) {
                 return _this.getYtLinks(config).then(function (links) {
                     links.sort(function (a, b) {
                         return a.quality > b.quality ? -1 : 1;
@@ -229,6 +308,40 @@ var main = {
                     });
                 });
             });
+        },
+        twitch: function (info) {
+            var _this = main;
+            return _this.getTwitchVideoUrl(info).then(function (url) {
+                console.log('myApp url: ' + url);
+
+                mono.sendMessage({
+                    action: 'setStatus',
+                    text: 'Found!'
+                });
+
+                mono.sendMessage({
+                    action: 'openUrl',
+                    url: url,
+                    mime: 'video/m3u8'
+                });
+            });
+        }
+    },
+    getVideoLink: function (msg) {
+        var _this = this;
+        return Promise.try(function () {
+            var url = msg.url;
+            if (!url) {
+                throw new Error("Url is empty!");
+            }
+
+            var info = _this.getUrlInfo(url);
+            console.log('myApp info: ' + JSON.stringify(info));
+            if (!info.type) {
+                throw new Error("VideoId is not found!");
+            }
+
+            return _this.service[info.type](info);
         });
     },
     ready: function () {

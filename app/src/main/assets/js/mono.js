@@ -694,6 +694,19 @@ var mono = (typeof mono !== 'undefined') ? mono : undefined;
     return params;
   };
 
+  mono.extend = function() {
+    var obj = arguments[0];
+    for (var i = 1, len = arguments.length; i < len; i++) {
+      var item = arguments[i];
+      for (var key in item) {
+        if (item[key] !== undefined) {
+          obj[key] = item[key];
+        }
+      }
+    }
+    return obj;
+  };
+
   //@insert
 
   return mono;
