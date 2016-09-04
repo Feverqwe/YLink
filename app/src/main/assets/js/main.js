@@ -227,7 +227,7 @@ var main = {
             if (info.id) {
                 if (info.videoType === 'v') {
                     promise = getToken(info, 'video').then(function (auth) {
-                        console.log('myApp auth: ' + JSON.stringify(auth));
+                        debug('auth: ' + JSON.stringify(auth));
 
                         return getHlsStreams(info, 'video', {
                             nauthsig: auth.sig,
@@ -240,7 +240,7 @@ var main = {
                 }
             } else {
                 promise = getToken(info, 'live').then(function (auth) {
-                    console.log('myApp auth: ' + JSON.stringify(auth));
+                    debug('auth: ' + JSON.stringify(auth));
 
                     return getHlsStreams(info, 'live', {
                         sig: auth.sig,
@@ -283,9 +283,83 @@ var main = {
 
         return result;
     },
+    addLinkInHistory: function (info, historyData) {
+        var history = {};
+        try {
+            history = JSON.parse(localStorage.getItem('history')) || {};
+        } catch (e) {}
+
+        var now = parseInt(Date.now() / 1000);
+        Object.keys(history).forEach(function (key) {
+            var item = history[key];
+            if (item.expire < now) {
+                delete history[key];
+            }
+        });
+
+        history[JSON.stringify(info)] = {expire: now + 86400, data: historyData};
+
+        localStorage.setItem("history", JSON.stringify(history));
+
+        return Promise.resolve();
+    },
+    getLinkFromHistory: function (info) {
+        var history = {};
+        try {
+            history = JSON.parse(localStorage.getItem('history')) || {};
+        } catch (e) {}
+
+        var now = parseInt(Date.now() / 1000);
+
+        var promise = null;
+        var item = history[JSON.stringify(info)];
+        if (!item || item.expire < now) {
+            promise = Promise.reject();
+        } else {
+            promise = new Promise(function (resolve, reject) {
+                mono.sendMessage({
+                    action: 'confirm',
+                    message: 'Open link from history?'
+                }, function (response) {
+                    debug('confirm response', JSON.stringify(response));
+                    if (response.result) {
+                        resolve();
+                    } else {
+                        reject();
+                    }
+                })
+            }).then(function () {
+                return Promise.resolve(item.data)
+            });
+        }
+
+        return promise;
+    },
+    onGetLink: function (info, item, fromHistory) {
+        var promise = null;
+        if (!fromHistory) {
+            promise = this.addLinkInHistory(info, item);
+        } else {
+            promise = Promise.resolve();
+        }
+
+        return promise.then(function () {
+            mono.sendMessage({
+                action: 'setStatus',
+                text: item.quality ? 'Found ' + item.quality : 'Found!'
+            });
+
+            mono.sendMessage({
+                action: 'openUrl',
+                url: item.url,
+                mime: item.mime
+            });
+        });
+    },
     service: {
         youtube: function (info) {
             var _this = main;
+
             return _this.getYtMeta(info.id).then(function (config) {
                 return _this.getYtLinks(config).then(function (links) {
                     links.sort(function (a, b) {
@@ -296,34 +370,24 @@ var main = {
                     }
 
                     var item = links[0];
-                    mono.sendMessage({
-                        action: 'setStatus',
-                        text: 'Found ' + item.quality
-                    });
 
-                    mono.sendMessage({
-                        action: 'openUrl',
-                        url: item.url,
-                        mime: item.mime
-                    });
+                    return item;
+                }).then(function (item) {
+                    return _this.onGetLink(info, item);
                 });
             });
         },
         twitch: function (info) {
             var _this = main;
+
             return _this.getTwitchVideoUrl(info).then(function (url) {
-                console.log('myApp url: ' + url);
-
-                mono.sendMessage({
-                    action: 'setStatus',
-                    text: 'Found!'
-                });
-
-                mono.sendMessage({
-                    action: 'openUrl',
+                return {
                     url: url,
+                    quality: '',
                     mime: 'video/m3u8'
-                });
+                };
+            }).then(function (item) {
+                return _this.onGetLink(info, item);
             });
         }
     },
@@ -336,18 +400,22 @@ var main = {
             }
 
             var info = _this.getUrlInfo(url);
-            console.log('myApp info: ' + JSON.stringify(info));
+            debug('info: ' + JSON.stringify(info));
             if (!info.type) {
                 throw new Error("VideoId is not found!");
             }
 
-            return _this.service[info.type](info);
+            return _this.getLinkFromHistory(info).then(function (item) {
+                return _this.onGetLink(info, item, true);
+            }).catch(function () {
+                return _this.service[info.type](info);
+            });
         });
     },
     ready: function () {
         var _this = this;
         mono.onMessage.addListener(function(msg, response) {
-            console.log('myApp msg: ' + JSON.stringify(msg));
+            debug('msg: ' + JSON.stringify(msg));
 
             if (_this[msg.action]) {
                 _this[msg.action](msg).catch(function (e) {

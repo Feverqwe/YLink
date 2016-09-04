@@ -2,11 +2,13 @@ package com.fever.ylink;
 
 import android.content.ClipData;
 import android.content.ClipboardManager;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Looper;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -24,11 +26,13 @@ import org.json.JSONObject;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
 
     private TextView inpURL = null;
     private TextView statusBar = null;
+    private TextView emptyTextView = null;
     private ClipboardManager clipboard = null;
 
     private WebView webView = null;
@@ -52,6 +56,7 @@ public class MainActivity extends AppCompatActivity {
         inpURL = (TextView) findViewById(R.id.inpURL);
         statusBar = (TextView) findViewById(R.id.statusBar);
         clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+        emptyTextView = (TextView) findViewById(R.id.emptyTextView);
 
         Button btnClear = (Button) findViewById(R.id.btnClear);
         Button btnPaste = (Button) findViewById(R.id.btnPaste);
@@ -117,6 +122,7 @@ public class MainActivity extends AppCompatActivity {
             this.callbackId = msg.getString("callbackId");
         }
         public void responseCall(JSONObject json) {
+            Log.d("responseCall", json.toString());
             JSONObject message = new JSONObject();
             try {
                 message.put("mono", true);
@@ -153,6 +159,40 @@ public class MainActivity extends AppCompatActivity {
         setStatusText("Sleep");
     }
 
+    private void openDialog(String title, String message, String positiveButton, String negativeButton, final MyCallback callback) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(title);
+        builder.setCancelable(false);
+        builder.setMessage(message);
+        builder.setPositiveButton(positiveButton, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                Log.d("openDialog", "True");
+                try {
+                    JSONObject json = new JSONObject();
+                    json.put("result", true);
+                    callback.callbackCall(json);
+                } catch (JSONException e) {
+                    Log.e("openDialog", e.toString());
+                }
+            }
+        });
+        builder.setNegativeButton(negativeButton, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                Log.d("openDialog", "False");
+                try {
+                    JSONObject json = new JSONObject();
+                    json.put("result", false);
+                    callback.callbackCall(json);
+                } catch (JSONException e) {
+                    Log.e("openDialog", e.toString());
+                }
+            }
+        });
+        builder.show();
+    }
+
     private class OnMessage {
         public void ping(JSONObject data, MyResponse response) throws JSONException {
             JSONObject responseMsg = new JSONObject();
@@ -176,6 +216,40 @@ public class MainActivity extends AppCompatActivity {
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             intent.setDataAndType(Uri.parse(url), mime);
             startActivity(intent.createChooser(intent, "Chose application"));
+        }
+        public void confirm(JSONObject data, final MyResponse response) throws JSONException {
+            String title = "";
+            String message = "";
+            String positiveButton = "OK";
+            String negativeButton = "Cancel";
+
+            if (data.has("title")) {
+                title = data.getString("title");
+            }
+            if (data.has("message")) {
+                message = data.getString("message");
+            }
+            if (data.has("positiveButton")) {
+                positiveButton = data.getString("positiveButton");
+            }
+            if (data.has("negativeButton")) {
+                negativeButton = data.getString("negativeButton");
+            }
+
+            openDialog(title, message, positiveButton, negativeButton, new MyCallback() {
+                public void callbackCall(JSONObject json) {
+                    response.responseCall(json);
+
+                    //hook: call change in main thread
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Integer n = new Random().nextInt(100);
+                            emptyTextView.setText( n.toString() );
+                        }
+                    });
+                }
+            });
         }
     }
 
@@ -219,23 +293,26 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private  void _bridgeSendMessage(final String message) {
+    private void _bridgeSendMessage(final String message) {
         webView.post(new Runnable() {
             @Override
             public void run() {
+                Log.d("_bridgeSendMessage", message.toString());
                 String script = "(function(message){" +
                         "window.dispatchEvent(new CustomEvent('monoMessage',{detail:'<'+JSON.stringify(message)}));" +
                         "})("+message+");";
 
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                    webView.evaluateJavascript(script, new ValueCallback<String>() {
-                        @Override
-                        public void onReceiveValue(String s) {
+                if (webView != null) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                        webView.evaluateJavascript(script, new ValueCallback<String>() {
+                            @Override
+                            public void onReceiveValue(String s) {
 
-                        }
-                    });
-                } else {
-                    webView.loadUrl("javascript:" + script);
+                            }
+                        });
+                    } else {
+                        webView.loadUrl("javascript:" + script);
+                    }
                 }
             }
         });
