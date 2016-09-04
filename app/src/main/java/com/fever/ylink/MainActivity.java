@@ -162,7 +162,6 @@ public class MainActivity extends AppCompatActivity {
     private void openDialog(String title, String message, String positiveButton, String negativeButton, final MyCallback callback) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(title);
-        builder.setCancelable(false);
         builder.setMessage(message);
         builder.setPositiveButton(positiveButton, new DialogInterface.OnClickListener() {
             @Override
@@ -239,15 +238,6 @@ public class MainActivity extends AppCompatActivity {
             openDialog(title, message, positiveButton, negativeButton, new MyCallback() {
                 public void callbackCall(JSONObject json) {
                     response.responseCall(json);
-
-                    //hook: call change in main thread
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Integer n = new Random().nextInt(100);
-                            emptyTextView.setText( n.toString() );
-                        }
-                    });
                 }
             });
         }
@@ -316,6 +306,10 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+
+        //hook: call change in main thread
+        Integer n = new Random().nextInt(100);
+        emptyTextView.setText( n.toString() );
     }
 
     private Boolean isMainThread() {
