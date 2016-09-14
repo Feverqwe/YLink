@@ -6,21 +6,21 @@ var debug = function () {
 
 var main = {
     getYtLinks: (function () {
-        var dy = {
-            auto: 0,
-            tiny: 144,
-            light: 144,
-            small: 240,
-            medium: 360,
-            large: 480,
-            hd720: 720,
-            hd1080: 1080,
-            hd1440: 1440,
-            hd2160: 2160,
-            hd2880: 2880,
-            highres: 4320
-        };
         var getQuality = function (quality) {
+            var dy = {
+                auto: 0,
+                tiny: 144,
+                light: 144,
+                small: 240,
+                medium: 360,
+                large: 480,
+                hd720: 720,
+                hd1080: 1080,
+                hd1440: 1440,
+                hd2160: 2160,
+                hd2880: 2880,
+                highres: 4320
+            };
             return dy[quality];
         };
 
@@ -251,6 +251,77 @@ var main = {
             return promise;
         };
     })(),
+    getGoodGameVideoUrl: (function () {
+        var HLS_URL_FORMAT = "http://hls.goodgame.ru/hls/{0}{1}.m3u8";
+        var QUALITIES_SUFFIX = {
+            "1080": "",
+            "720": "_720",
+            "480": "_480",
+            "240": "_240"
+        };
+        var re = /<meta [^>]+ content="https?:\/\/(?:[^.]+\.)?goodgame.ru\/player\/html\?(\d+)">/;
+
+        var getStreamId = function (url) {
+            return mono.requestPromise({
+                url: url,
+                headers: {
+                    Referer: url
+                }
+            }).then(function (response) {
+                var m = re.exec(response.body);
+                var stream_id = m && m[1];
+                if (!stream_id) {
+                    throw new Error("Stream id is not found!");
+                } else {
+                    return stream_id;
+                }
+            });
+        };
+
+        var getValidLink = function (links) {
+            return new Promise(function (resolve, reject) {
+                var i = 0;
+                var next = function () {
+                    var item = links[i++];
+
+                    if (!item) {
+                        return reject(new Error("Stream checking error!"));
+                    }
+
+                    mono.sendMessage({
+                        action: 'setStatus',
+                        text: 'Check quality ' + item.quality
+                    });
+
+                    return mono.requestPromise({
+                        type: 'HEAD',
+                        url: item.url
+                    }).then(function () {
+                        resolve(item);
+                    }).catch(function () {
+                        next();
+                    });
+                };
+                next();
+            });
+        };
+
+        return function (info) {
+            return getStreamId('http:' + info.url).then(function (stream_id) {
+                var links = Object.keys(QUALITIES_SUFFIX).map(function (quality) {
+                    var suffix = QUALITIES_SUFFIX[quality];
+                    return {
+                        url: HLS_URL_FORMAT.replace('{0}', stream_id).replace('{1}', suffix),
+                        quality: parseInt(quality),
+                        mime: 'video/m3u8'
+                    };
+                }).sort(function (a, b) {
+                    return a.quality > b.quality ? -1 : 1;
+                });
+                return getValidLink(links);
+            });
+        }
+    })(),
     getUrlInfo: function (url) {
         var result = {};
 
@@ -277,6 +348,18 @@ var main = {
                 result.channel = m[2];
                 result.videoType = m[3];
                 result.id = m[4];
+                return true;
+            }
+        });
+
+        [
+            /(\/\/(?:[^\/]+\.)?goodgame\.ru\/channel\/(\w+))/
+        ].some(function (re) {
+            var m = re.exec(url);
+            if (m) {
+                result.type = 'goodgame';
+                result.id = m[2];
+                result.url = m[1];
                 return true;
             }
         });
@@ -386,6 +469,15 @@ var main = {
                     quality: '',
                     mime: 'video/m3u8'
                 };
+            }).then(function (item) {
+                return _this.onGetLink(info, item);
+            });
+        },
+        goodgame: function (info) {
+            var _this = main;
+
+            return _this.getGoodGameVideoUrl(info).then(function (linkItem) {
+                return linkItem;
             }).then(function (item) {
                 return _this.onGetLink(info, item);
             });
