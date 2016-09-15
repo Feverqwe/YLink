@@ -259,7 +259,7 @@ var main = {
             "480": "_480",
             "240": "_240"
         };
-        var re = /<meta [^>]+ content="https?:\/\/(?:[^.]+\.)?goodgame.ru\/player\/html\?(\d+)">/;
+        var m3u8Re = /<meta [^>]+ content="https?:\/\/(?:[^.]+\.)?goodgame.ru\/player\/html\?(\d+)">/;
 
         var getStreamId = function (url) {
             return mono.requestPromise({
@@ -268,26 +268,20 @@ var main = {
                     Referer: url
                 }
             }).then(function (response) {
-                var m = re.exec(response.body);
+                var m = m3u8Re.exec(response.body);
                 var stream_id = m && m[1];
                 if (!stream_id) {
                     throw new Error("Stream id is not found!");
-                } else {
-                    return stream_id;
                 }
+
+                return stream_id;
             });
         };
 
         var getValidLink = function (links) {
-            return new Promise(function (resolve, reject) {
-                var i = 0;
-                var next = function () {
-                    var item = links[i++];
-
-                    if (!item) {
-                        return reject(new Error("Stream checking error!"));
-                    }
-
+            var promise = Promise.reject();
+            links.forEach(function (item) {
+                promise = promise.catch(function () {
                     mono.sendMessage({
                         action: 'setStatus',
                         text: 'Check quality ' + item.quality
@@ -297,12 +291,12 @@ var main = {
                         type: 'HEAD',
                         url: item.url
                     }).then(function () {
-                        resolve(item);
-                    }).catch(function () {
-                        next();
+                        return item;
                     });
-                };
-                next();
+                });
+            });
+            return promise.catch(function () {
+                throw new Error("Stream checking error!");
             });
         };
 
@@ -496,6 +490,11 @@ var main = {
             if (!info.type) {
                 throw new Error("VideoId is not found!");
             }
+
+            mono.sendMessage({
+                action: 'setStatus',
+                text: 'Service: ' + info.type
+            });
 
             return _this.getLinkFromHistory(info).then(function (item) {
                 return _this.onGetLink(info, item, true);
