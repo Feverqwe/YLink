@@ -259,7 +259,7 @@ var main = {
             "480": "_480",
             "240": "_240"
         };
-        var m3u8Re = /<meta [^>]+ content="https?:\/\/(?:[^.]+\.)?goodgame.ru\/player\/html\?(\d+)">/;
+        var streamIdRe = /<meta [^>]+ content="https?:\/\/(?:[^.]+\.)?goodgame.ru\/player\/html\?(\d+)">/;
 
         var getStreamId = function (url) {
             return mono.requestPromise({
@@ -268,13 +268,13 @@ var main = {
                     Referer: url
                 }
             }).then(function (response) {
-                var m = m3u8Re.exec(response.body);
-                var stream_id = m && m[1];
-                if (!stream_id) {
+                var m = streamIdRe.exec(response.body);
+                var streamId = m && m[1];
+                if (!streamId) {
                     throw new Error("Stream id is not found!");
                 }
 
-                return stream_id;
+                return streamId;
             });
         };
 
