@@ -292,7 +292,7 @@ var main = {
 
                     return mono.requestPromise({
                         type: 'HEAD',
-                        url: item.url
+                        url: 'http:' + item.url
                     }).then(function () {
                         return item;
                     });
@@ -304,7 +304,7 @@ var main = {
         };
 
         return function (info) {
-            return getStreamId('http:' + info.url).then(function (stream_id) {
+            return getStreamId(info.url).then(function (stream_id) {
                 var links = Object.keys(QUALITIES_SUFFIX).map(function (quality) {
                     var suffix = QUALITIES_SUFFIX[quality];
                     return {
@@ -336,15 +336,14 @@ var main = {
         });
 
         [
-            /(\/\/(?:[^\/]+\.)?twitch\.tv\/(\w+)(?:\/(v)\/(\d+))?)/
+            /\/\/(?:[^\/]+\.)?twitch\.tv\/(\w+)(?:\/(v)\/(\d+))?/
         ].some(function (re) {
             var m = re.exec(url);
             if (m) {
                 result.type = 'twitch';
-                result.url = m[1];
-                result.channel = m[2];
-                result.videoType = m[3];
-                result.id = m[4];
+                result.channel = m[1];
+                result.videoType = m[2];
+                result.id = m[3];
                 return true;
             }
         });
