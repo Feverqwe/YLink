@@ -463,7 +463,7 @@ var mono = (typeof mono !== 'undefined') ? mono : undefined;
 
       var err = null;
       if (e) {
-        err = String(e.message || e) || 'ERROR';
+        err = e || 'ERROR';
       }
       origCb && origCb(err, getResponse(body), body);
     };
