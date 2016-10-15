@@ -262,9 +262,10 @@ var main = {
             "480": "_480",
             "240": "_240"
         };
-        var streamIdRe = /<meta [^>]+ content="https?:\/\/(?:[^.]+\.)?goodgame.ru\/player\/html\?(\d+)">/;
+        var streamIdRe = /"channel_id":"(\d+)"/;
 
         var getStreamId = function (url) {
+            debug('getStreamId', url);
             return mono.requestPromise({
                 url: url,
                 headers: {
@@ -292,7 +293,7 @@ var main = {
 
                     return mono.requestPromise({
                         type: 'HEAD',
-                        url: 'http:' + item.url
+                        url: item.url
                     }).then(function () {
                         return item;
                     });
@@ -305,6 +306,8 @@ var main = {
 
         return function (info) {
             return getStreamId(info.url).then(function (stream_id) {
+                debug('stream_id', stream_id);
+
                 var links = Object.keys(QUALITIES_SUFFIX).map(function (quality) {
                     var suffix = QUALITIES_SUFFIX[quality];
                     return {
@@ -355,7 +358,7 @@ var main = {
             if (m) {
                 result.type = 'goodgame';
                 result.id = m[2];
-                result.url = m[1];
+                result.url = 'http:' + m[1];
                 return true;
             }
         });
