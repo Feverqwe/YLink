@@ -170,7 +170,7 @@ var main = {
             var url = 'https://www.youtube.com/get_video_info?' + mono.param({
                     video_id: id,
                     eurl: 'https://www.youtube.com/watch?v=' + id,
-                    el: 'info'
+                    el: 'detailpage'
                 });
             return mono.requestPromise({
                 url: url
