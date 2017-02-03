@@ -333,8 +333,9 @@ var main = {
     })(),
     getUrlInfo: function (url) {
         var result = {};
+        var found;
 
-        [
+        found = !found && [
             /\/\/(?:[^\/]+\.)?youtu\.be\/([\w\-]+)/,
             /\/\/(?:[^\/]+\.)?youtube\.com\/.+[?&]v=([\w\-]+)/,
             /\/\/(?:[^\/]+\.)?youtube\.com\/(?:.+\/)?(?:v|embed)\/([\w\-]+)/
@@ -347,7 +348,29 @@ var main = {
             }
         });
 
-        [
+        found = !found && [
+            /\/\/(?:[^\/]+\.)?twitch\.tv\/videos\/(\d+)/
+        ].some(function (re) {
+            var m = re.exec(url);
+            if (m) {
+                result = mono.requestPromise({
+                    url: url
+                }).then(function (response) {
+                    result = {};
+                    var mChannel = /twitch:\/\/stream\/([^'"]+)/.exec(response.body);
+                    if (mChannel) {
+                        result.type = 'twitch';
+                        result.channel = mChannel[1];
+                        result.videoType = 'v';
+                        result.id = m[1];
+                    }
+                    return result;
+                });
+                return true;
+            }
+        });
+
+        found = !found && [
             /\/\/(?:[^\/]+\.)?twitch\.tv\/(\w+)(?:\/(v)\/(\d+))?/
         ].some(function (re) {
             var m = re.exec(url);
@@ -360,7 +383,7 @@ var main = {
             }
         });
 
-        [
+        found = !found && [
             /(\/\/(?:[^\/]+\.)?goodgame\.ru\/channel\/(\w+))/
         ].some(function (re) {
             var m = re.exec(url);
@@ -499,7 +522,8 @@ var main = {
                 throw new Error("Url is empty!");
             }
 
-            var info = _this.getUrlInfo(url);
+            return _this.getUrlInfo(url);
+        }).then(function (info) {
             debug('info: ' + JSON.stringify(info));
             if (!info.type) {
                 throw new Error("VideoId is not found!");
