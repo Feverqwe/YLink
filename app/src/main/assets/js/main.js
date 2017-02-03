@@ -1,3 +1,10 @@
+requirejs.config({
+    baseUrl: "./lib",
+    paths: {
+        bluebird: 'bluebird.min'
+    }
+});
+
 var debug = function () {
     var args = [].slice.call(arguments);
     args.unshift('myApp');
@@ -183,12 +190,13 @@ var main = {
         var getToken = function (info, type) {
             var url = 'https://api.twitch.tv';
             if (type === 'live') {
-                url += '/api/channels/'+info.channel;
+                url += '/api/channels/' + info.channel;
             } else {
                 url += '/api/vods/' + info.id;
             }
             url += '/access_token.json';
 
+            debug('request token', url);
             return mono.requestPromise({
                 url: url,
                 headers: {
@@ -197,6 +205,7 @@ var main = {
                 json: true
             }).then(function (response) {
                 var json = response.body;
+                debug('token', json);
                 return {
                     sig: json.sig,
                     token: json.token
@@ -510,7 +519,7 @@ var main = {
     },
     ready: function () {
         var _this = this;
-        mono.onMessage.addListener(function(msg, response) {
+        mono.onMessage(function(msg, response) {
             debug('msg: ' + JSON.stringify(msg));
 
             if (_this[msg.action]) {
@@ -526,28 +535,12 @@ var main = {
         mono.sendMessage({
             action: 'ready'
         });
-    },
-    prepare: function () {
-        var _this = this;
-        var script = document.createElement('script');
-        script.src = './lib/require.min.js';
-        script.addEventListener('load', function () {
-            requirejs.config({
-                baseUrl: "./lib",
-                paths: {
-                    bluebird: 'bluebird.min'
-                }
-            });
-            require(['bluebird'], function (_Promise) {
-                window.Promise = _Promise;
-
-                _this.ready();
-            });
-        });
-        document.head.appendChild(script);
     }
 };
 
-mono.onReady(function() {
-    main.prepare();
+require(['bluebird'], function (_Promise) {
+    window.Promise = _Promise;
+    mono.onReady(function() {
+        main.ready();
+    });
 });

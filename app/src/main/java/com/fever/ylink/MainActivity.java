@@ -7,14 +7,12 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Looper;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.webkit.JavascriptInterface;
-import android.webkit.ValueCallback;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.Button;
@@ -26,7 +24,6 @@ import org.json.JSONObject;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -37,14 +34,10 @@ public class MainActivity extends AppCompatActivity {
 
     private WebView webView = null;
 
-    private Integer callbackIndex = 0;
-    private List<Object[]> callbackStack = new ArrayList<>();
-
     private Boolean isReady = false;
-    private List<String> onReadyMessageStack = new ArrayList<>();
 
     interface MyCallback {
-        void callbackCall(JSONObject json);
+        void call(JSONObject json);
     }
 
     @Override
@@ -94,7 +87,7 @@ public class MainActivity extends AppCompatActivity {
             JSONObject message = new JSONObject();
             message.put("action", "getVideoLink");
             message.put("url", url);
-            bridgeSendMessage(message);
+            postMessage(message);
         } catch (JSONException e) {
             Log.e("onReady", e.toString());
         }
@@ -103,7 +96,7 @@ public class MainActivity extends AppCompatActivity {
     private void initWebView() {
         setStatusText("Loading");
         webView = new WebView(this);
-        webView.addJavascriptInterface(new JsObject(), "monoBridge");
+        webView.addJavascriptInterface(new JsObject(), "parent");
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             webView.setWebContentsDebuggingEnabled(true);
         }
@@ -117,44 +110,12 @@ public class MainActivity extends AppCompatActivity {
         webView.loadUrl("file:///android_asset/index.html");
     }
 
-    private class MyResponse {
-        private String callbackId = null;
-        private MyResponse(JSONObject msg) throws JSONException {
-            this.callbackId = msg.getString("callbackId");
-        }
-        public void responseCall(JSONObject json) {
-            Log.d("responseCall", json.toString());
-            JSONObject message = new JSONObject();
-            try {
-                message.put("mono", true);
-                message.put("data", json);
-                message.put("responseId", callbackId);
-            } catch (JSONException e) {
-                Log.e("setMsg", e.toString());
-            }
-            _bridgeSendMessageWrapper(message.toString());
-        }
-    }
-
-    private void onReady() {
-        Log.d("myApp", "onReady");
-        isReady = true;
-
-        for (String message:onReadyMessageStack) {
-            _bridgeSendMessageWrapper(message);
-        }
-        onReadyMessageStack.clear();
-
-        setStatusText("Ready!");
-    }
-
     private void destroyWebView() {
         Log.d("myApp", "destroyWebView");
         if (webView != null) {
             webView.destroy();
             webView = null;
         }
-        callbackStack.clear();
         isReady = false;
 
         setStatusText("Sleep");
@@ -171,7 +132,7 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     JSONObject json = new JSONObject();
                     json.put("result", true);
-                    callback.callbackCall(json);
+                    callback.call(json);
                 } catch (JSONException e) {
                     Log.e("openDialog", e.toString());
                 }
@@ -184,7 +145,7 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     JSONObject json = new JSONObject();
                     json.put("result", false);
-                    callback.callbackCall(json);
+                    callback.call(json);
                 } catch (JSONException e) {
                     Log.e("openDialog", e.toString());
                 }
@@ -193,19 +154,30 @@ public class MainActivity extends AppCompatActivity {
         builder.show();
     }
 
-    private class OnMessage {
-        public void ping(JSONObject data, MyResponse response) throws JSONException {
+    private class Actions {
+        public void ping(JSONObject data, Integer callbackId) throws JSONException {
             JSONObject responseMsg = new JSONObject();
             responseMsg.put("action", "pong");
-            response.responseCall(responseMsg);
+            postMessage(responseMsg, callbackId);
         }
-        public void ready(JSONObject data, MyResponse response) {
-            onReady();
+
+        public void ready(JSONObject data, Integer callbackId) throws JSONException {
+            Log.d("action ready", data.toString());
+            isReady = true;
+
+            for (JSONObject message : onReadyMessageStack) {
+                postMessage(message);
+            }
+            onReadyMessageStack.clear();
+
+            setStatusText("Ready!");
         }
-        public void setStatus(JSONObject data, MyResponse response) throws JSONException {
+
+        public void setStatus(JSONObject data, Integer callbackId) throws JSONException {
             setStatusText(data.getString("text"));
         }
-        public void openUrl(JSONObject data, MyResponse response) throws JSONException {
+
+        public void openUrl(JSONObject data, Integer callbackId) throws JSONException {
             String url = data.getString("url");
             String mime = "video/*";
             if (data.has("mime")) {
@@ -217,7 +189,8 @@ public class MainActivity extends AppCompatActivity {
             intent.setDataAndType(Uri.parse(url), mime);
             startActivity(intent.createChooser(intent, "Chose application"));
         }
-        public void confirm(JSONObject data, final MyResponse response) throws JSONException {
+
+        public void confirm(JSONObject data, final Integer callbackId) throws JSONException {
             String title = "";
             String message = "";
             String positiveButton = "OK";
@@ -236,132 +209,80 @@ public class MainActivity extends AppCompatActivity {
                 negativeButton = data.getString("negativeButton");
             }
 
+            final Integer fCallbackId = callbackId;
             openDialog(title, message, positiveButton, negativeButton, new MyCallback() {
-                public void callbackCall(JSONObject json) {
-                    response.responseCall(json);
+                public void call(JSONObject json) {
+                    postMessage(json, fCallbackId);
                 }
             });
         }
     }
 
-    private OnMessage onMessage = new OnMessage();
+    private Actions actions = new Actions();
 
     public class JsObject {
         @JavascriptInterface
-        public void sendMessage(String message) throws JSONException {
-            JSONObject jsonObject = new JSONObject(message);
-            JSONObject data = jsonObject.getJSONObject("data");
+        public void postMessage(String msg, String transferList) throws JSONException {
+            JSONObject msgObject = new JSONObject(msg);
+            JSONObject message = msgObject.getJSONObject("message");
 
-            if (jsonObject.has("responseId")) {
-                Integer id = jsonObject.getInt("responseId");
-                for (int i = 0; i < callbackStack.size(); i++) {
-                    Object[] item = callbackStack.get(i);
-                    Integer cbId = (Integer) item[0];
-                    if (cbId.equals(id)) {
-                        MyCallback cb = (MyCallback) item[1];
-                        cb.callbackCall(data);
-                        callbackStack.remove(i);
-                        break;
-                    }
-                }
-            } else {
-                MyResponse response = null;
-                if (jsonObject.has("callbackId")) {
-                    response = new MyResponse(jsonObject);
-                }
+            Log.d("postMessage, msg", msg);
 
-                String action = data.getString("action");
-                try {
-                    Class[] cArg = new Class[2];
-                    cArg[0] = JSONObject.class;
-                    cArg[1] = MyResponse.class;
-                    Method method = onMessage.getClass().getMethod(action, cArg);
-                    method.invoke(onMessage, data, response);
-                } catch (Exception e) {
-                    Log.e("myApp", e.toString());
-                }
+            Integer callbackId = 0;
+            if (msgObject.has("callbackId")) {
+                callbackId = msgObject.getInt("callbackId");
+            }
+
+            String action = message.getString("action");
+            try {
+                Class[] cArg = new Class[2];
+                cArg[0] = JSONObject.class;
+                cArg[1] = Integer.class;
+                Method method = actions.getClass().getMethod(action, cArg);
+                method.invoke(actions, message, callbackId);
+            } catch (Exception e) {
+                Log.e("callAction", e.toString());
             }
         }
     }
 
-    private void _bridgeSendMessage(final String message) {
-        webView.post(new Runnable() {
-            @Override
-            public void run() {
-                Log.d("_bridgeSendMessage", message.toString());
-                String script = "(function(message){" +
-                        "window.dispatchEvent(new CustomEvent('monoMessage',{detail:'<'+JSON.stringify(message)}));" +
-                        "})("+message+");";
-
-                if (webView != null) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                        webView.evaluateJavascript(script, new ValueCallback<String>() {
-                            @Override
-                            public void onReceiveValue(String s) {
-
-                            }
-                        });
-                    } else {
-                        webView.loadUrl("javascript:" + script);
-                    }
-                }
-            }
-        });
-
-        //hook: call change in main thread
-        Integer n = new Random().nextInt(100);
-        emptyTextView.setText( n.toString() );
+    private void postMessage(JSONObject message) {
+        postMessage(message, 0);
     }
 
-    private Boolean isMainThread() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            return Looper.getMainLooper().isCurrentThread();
-        } else {
-            return Thread.currentThread() == Looper.getMainLooper().getThread();
-        }
-    }
+    private List<JSONObject> onReadyMessageStack = new ArrayList<>();
 
-    private void _bridgeSendMessageWrapper(final String message) {
+    private void postMessage(JSONObject message, Integer callbackId) {
         if (!isReady) {
-            Log.d("myApp", "isStack: " + message);
+            Log.d("postMessage, isStack", message.toString());
             onReadyMessageStack.add(message);
             if (webView == null) {
                 initWebView();
             }
-        } else
-        if (isMainThread()) {
-            _bridgeSendMessage(message);
         } else {
+            Log.d("postMessage, send", message.toString());
+            final JSONObject fMessage = message;
+            final Integer fCallbackId = callbackId;
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    _bridgeSendMessage(message);
+                    try {
+                        JSONObject msg = new JSONObject();
+                        if (fCallbackId > 0) {
+                            msg.put("responseId", fCallbackId);
+                        }
+                        msg.put("message", fMessage);
+
+                        String script = "(function(message){" +
+                                "window.onmessage({data:message});" +
+                                "})(" + msg.toString() + ");";
+                        webView.loadUrl("javascript:" + script);
+                    } catch (JSONException e) {
+                        Log.e("postMessage", e.toString());
+                    }
                 }
             });
         }
-    }
-
-    private void bridgeSendMessage(final JSONObject data) throws JSONException {
-        bridgeSendMessage(data, null);
-    }
-
-    private void bridgeSendMessage(final JSONObject data, MyCallback callback) throws JSONException {
-        JSONObject message = new JSONObject();
-
-        message.put("mono", true);
-        message.put("data", data);
-
-        if (callback != null) {
-            Integer id = callbackIndex++;
-            Object[] item = new Object[]{id, callback};
-            callbackStack.add(item);
-            message.put("hasCallback", true);
-            message.put("callbackId", id.toString());
-        } else {
-            message.put("hasCallback", false);
-        }
-
-        _bridgeSendMessageWrapper(message.toString());
     }
 
     @Override
