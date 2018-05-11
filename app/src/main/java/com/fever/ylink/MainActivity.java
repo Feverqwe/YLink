@@ -143,6 +143,13 @@ public class MainActivity extends AppCompatActivity {
                 callback.call(false);
             }
         });
+        builder.setOnCancelListener(new DialogInterface.OnCancelListener() {
+            @Override
+            public void onCancel(DialogInterface dialogInterface) {
+                Log.d("openDialog", "onCancel");
+                callback.call(null);
+            }
+        });
         builder.show();
     }
 
