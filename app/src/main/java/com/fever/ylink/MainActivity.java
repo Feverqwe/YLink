@@ -13,6 +13,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.webkit.JavascriptInterface;
+import android.webkit.WebMessage;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.Button;
@@ -342,10 +343,16 @@ public class MainActivity extends AppCompatActivity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    String script = "(function(message){" +
-                            "window.onmessage({data:message});" +
-                            "})(" + msg.toString() + ");";
-                    webView.loadUrl("javascript:" + script);
+                    if (Build.VERSION.SDK_INT < 23) {
+                        final String script = "(function(message){window.onmessage({data:JSON.stringify(message)})})(" + msg.toString() + ");";
+                        if (Build.VERSION.SDK_INT < 19) {
+                            webView.loadUrl("javascript:" + script);
+                        } else {
+                            webView.evaluateJavascript(script, null);
+                        }
+                    } else {
+                        webView.postWebMessage(new WebMessage(msg.toString()), Uri.parse("*"));
+                    }
                 }
             });
         }

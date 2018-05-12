@@ -21,9 +21,7 @@ class Index {
       },
       onMessage: function (cb) {
         window.onmessage = function (e) {
-          // if (e.source === parent) {
-            cb(e.data);
-          // }
+          cb(JSON.parse(e.data));
         };
       }
     }, this.api);
@@ -71,24 +69,27 @@ class Index {
           this.callFn('setStatus', ['Service: ' + info.type]);
 
           return this.history.get(JSON.stringify(info)).then(links => {
-            return this.callFn('confirm', [{
-              message: 'Open link from history?'
-            }]).then(result => {
-              if (result) {
+            if (links) {
+              return this.callFn('confirm', [{
+                message: 'Open link from history?'
+              }]).then(result => {
+                if (result) {
+                  return links;
+                } else {
+                  return null;
+                }
+              });
+            }
+          }).then(links => {
+            if (!links) {
+              this.callFn('setStatus', [`${info.type}: Request links`]);
+              return this.services[info.type].getLinks(info).then(links => {
+                this.history.set(JSON.stringify(info), links);
                 return links;
-              } else {
-                const err = new Error('CACHE_SKIP');
-                err.code = 'CACHE_SKIP';
-                throw err;
-              }
-            });
-          }).catch(err => {
-            debug('getLinkFromHistory error', err);
-            this.callFn('setStatus', [`${info.type}: Request links`]);
-            return this.services[info.type].getLinks(info).then(links => {
-              this.history.set(JSON.stringify(info), links);
+              });
+            } else {
               return links;
-            });
+            }
           }).then(link => {
             return this.onGetLink(info, link);
           });

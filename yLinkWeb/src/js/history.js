@@ -13,22 +13,15 @@ class History {
   }
   get(key) {
     return Promise.resolve().then(() => {
+      let result = null;
+
       const now = Math.trunc(Date.now() / 1000);
-
       const item = this.history[key];
-      if (!item) {
-        const err = new Error('CACHE_NOT_FOUND');
-        err.code = 'CACHE_NOT_FOUND';
-        throw err;
+      if (item && item.expire > now) {
+        result = item.data;
       }
 
-      if (item.expire < now) {
-        const err = new Error('CACHE_EXPIRED');
-        err.code = 'CACHE_EXPIRED';
-        throw err;
-      }
-
-      return item.data;
+      return result;
     });
   }
   set(key, value) {
