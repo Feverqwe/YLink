@@ -12,8 +12,9 @@ const outputPath = path.resolve('../app/src/main/assets');
 
 const env = {
   targets: {
-    browsers: ['Chrome >= 60']
-  }
+    browsers: ['Android >= 4']
+  },
+  useBuiltIns: 'usage'
 };
 
 const config = {
@@ -28,13 +29,13 @@ const config = {
   module: {
     rules: [
       {
-        test: /.js$/,
+        test: /\.js$/,
         exclude: /node_modules/,
         use: {
           loader: 'babel-loader',
           options: {
             presets: [
-              ['env', env]
+              ['@babel/preset-env', env]
             ]
           }
         }
@@ -58,19 +59,19 @@ const config = {
 
 if (!isWatch) {
   config.devtool = 'none';
-  Object.keys(config.entry).forEach(entryName => {
-    let value = config.entry[entryName];
-    if (!Array.isArray(value)) {
-      value = [value];
-    }
-
-    value.unshift(
-      'core-js/fn/promise',
-      'whatwg-fetch',
-    );
-
-    config.entry[entryName] = value;
-  });
 }
+
+Object.keys(config.entry).forEach(entryName => {
+  let value = config.entry[entryName];
+  if (!Array.isArray(value)) {
+    value = [value];
+  }
+
+  value.unshift(
+    'whatwg-fetch',
+  );
+
+  config.entry[entryName] = value;
+});
 
 module.exports = config;
