@@ -9,3 +9,4 @@
 .idea
 /yLinkWeb/node_modules
 /app/build/reports
+/app/build/outputs/mapping
