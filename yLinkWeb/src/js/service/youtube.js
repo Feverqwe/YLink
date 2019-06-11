@@ -91,16 +91,16 @@ const readFmt = function (links, fmt) {
     let url = item.url;
     if (!/(\?|&)s(ig(nature)?)?=/i.test(url)) {
       if (item.sig) {
-        url += '&signature=' + item.sig;
+        url += '&sig=' + item.sig;
       } else if (item.signature) {
-        url += '&signature=' + item.signature;
+        url += '&sig=' + item.signature;
       } else if (item.s) {
         debug('Is protected video!');
         return;
       }
     }
 
-    url = url.replace(/(\?|&)sig=/i, '$1signature=').replace(/\\u0026/ig, '&');
+    url = url.replace(/(\?|&)signature=/i, '$1sig=').replace(/\\u0026/ig, '&');
 
     let itag = url.match(/(?:\?|&)itag=(\d+)/i);
     itag = itag && itag[1] || item.itag;
