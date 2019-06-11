@@ -93,14 +93,12 @@ const readFmt = function (links, fmt) {
       if (item.sig) {
         url += '&sig=' + item.sig;
       } else if (item.signature) {
-        url += '&sig=' + item.signature;
+        url += '&signature=' + item.signature;
       } else if (item.s) {
         debug('Is protected video!');
         return;
       }
     }
-
-    url = url.replace(/(\?|&)signature=/i, '$1sig=').replace(/\\u0026/ig, '&');
 
     let itag = url.match(/(?:\?|&)itag=(\d+)/i);
     itag = itag && itag[1] || item.itag;
