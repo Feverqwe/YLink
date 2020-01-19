@@ -1,6 +1,6 @@
 const {DefinePlugin} = require('webpack');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
-const CleanWebpackPlugin = require('clean-webpack-plugin');
+const {CleanWebpackPlugin} = require('clean-webpack-plugin');
 const path = require('path');
 
 
@@ -14,7 +14,8 @@ const env = {
   targets: {
     browsers: ['Android >= 4']
   },
-  useBuiltIns: 'usage'
+  useBuiltIns: 'usage',
+  corejs: 2,
 };
 
 const config = {
@@ -43,8 +44,11 @@ const config = {
     ]
   },
   plugins: [
-    new CleanWebpackPlugin(outputPath, {
-      allowExternal: true
+    new CleanWebpackPlugin({
+      dry: false,
+      dangerouslyAllowCleanPatternsOutsideProject: true,
+      cleanStaleWebpackAssets: false,
+      cleanOnceBeforeBuildPatterns: [outputPath]
     }),
     new CopyWebpackPlugin([
       {from: './src/index.html'}
