@@ -7,8 +7,6 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
@@ -18,6 +16,9 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.TextView;
+
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -29,7 +30,7 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-    private TextView inpURL = null;
+    private TextView inputUrl = null;
     private TextView statusBar = null;
     private TextView emptyTextView = null;
     private ClipboardManager clipboard = null;
@@ -52,10 +53,9 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_main);
 
-        inpURL = (TextView) findViewById(R.id.inpURL);
+        inputUrl = (TextView) findViewById(R.id.inpURL);
         statusBar = (TextView) findViewById(R.id.statusBar);
         clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
-        emptyTextView = (TextView) findViewById(R.id.emptyTextView);
 
         Button btnClear = (Button) findViewById(R.id.btnClear);
         Button btnPaste = (Button) findViewById(R.id.btnPaste);
@@ -64,7 +64,7 @@ public class MainActivity extends AppCompatActivity {
         btnClear.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                inpURL.setText("");
+                inputUrl.setText("");
                 destroyWebView();
             }
         });
@@ -76,14 +76,14 @@ public class MainActivity extends AppCompatActivity {
                     Integer index = 0;
                     ClipData.Item item = clip.getItemAt(index);
                     String text = item.getText().toString();
-                    inpURL.setText(text);
+                    inputUrl.setText(text);
                 }
             }
         });
         btnGetLink.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                getUrlLinks(inpURL.getText().toString());
+                getUrlLinks(inputUrl.getText().toString());
             }
         });
     }
@@ -203,7 +203,7 @@ public class MainActivity extends AppCompatActivity {
             case "openUrl": {
                 JSONObject options = args.getJSONObject(0);
                 String url = options.getString("url");
-                String mime = "video/*";
+                String mime = "";
                 if (options.has("mime")) {
                     mime = options.getString("mime");
                 }
@@ -386,7 +386,7 @@ public class MainActivity extends AppCompatActivity {
         Log.d("myApp", "handleSendText " + sharedText);
 
         if (sharedText != null) {
-            inpURL.setText(sharedText);
+            inputUrl.setText(sharedText);
             getUrlLinks(sharedText);
         }
     }
