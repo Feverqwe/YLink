@@ -16,13 +16,40 @@ const config = {
     path: outputPath,
     filename: 'js/[name].js'
   },
+  target: ['web', 'es5'],
   devtool: 'source-map',
   module: {
     rules: [
       {
         test: /\.[jt]sx?$/,
         use: 'ts-loader',
+        resource: (resource) => {
+          if (/node_modules/.test(resource)) {
+            if (/node_modules[\\/](debug|serialize-error)/.test(resource)) {
+              return true;
+            }
+            return false;
+          }
+          return true;
+        },
+      },
+      {
+        test: /\.js$/,
         exclude: /node_modules/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: [
+              ['@babel/preset-env', {
+                targets: {
+                  browsers: ['Android >= 4']
+                },
+                useBuiltIns: 'usage',
+                corejs: 3,
+              }]
+            ]
+          }
+        }
       }
     ]
   },

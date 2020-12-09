@@ -8,8 +8,5 @@
     "moduleResolution": "Node",
     "skipLibCheck": true,
     "outDir": "./dist/"
-  },
-  "include": [
-    "node_modules/serialize-error/*"
-  ]
+  }
 }
