@@ -203,7 +203,7 @@ public class MainActivity extends AppCompatActivity {
             case "openUrl": {
                 JSONObject options = args.getJSONObject(0);
                 String url = options.getString("url");
-                String mime = "";
+                String mime = "video/*";
                 if (options.has("mime")) {
                     mime = options.getString("mime");
                 }
