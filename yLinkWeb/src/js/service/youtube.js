@@ -16,6 +16,7 @@ const getYtMeta = (id) => {
 const getYtLinks = (playerResponse) => {
   const links = [];
   playerResponse.streamingData.formats.forEach((format) => {
+    if (!format.url) return;
     links.push({
       width: format.width,
       height: format.height,
