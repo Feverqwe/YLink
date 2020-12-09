@@ -1,4 +1,4 @@
-const debug = require('debug')('twitch');
+const debug = require('debug')('app:twitch');
 const qs = require('querystring');
 
 const getToken = function (info, type) {

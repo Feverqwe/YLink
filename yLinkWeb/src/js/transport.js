@@ -1,9 +1,11 @@
-const debug = require('debug')('frameWorker');
-import once from 'lodash.once';
-import deserializeError from 'deserialize-error';
-import serializeError from 'serialize-error';
+const debug = require('debug')('app:frameWorker');
+import {serializeError, deserializeError} from 'serialize-error';
 
 const emptyFn = () => {};
+const once = (cb) => (...args) => {
+  cb && cb(...args);
+  cb = null;
+};
 
 const promiseCallbackMap = new WeakMap();
 

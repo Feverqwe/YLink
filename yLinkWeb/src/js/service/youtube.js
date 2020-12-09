@@ -1,4 +1,4 @@
-const debug = require('debug')('youtube');
+const debug = require('debug')('app:youtube');
 const qs = require('querystring');
 
 const getYtMeta = (id) => {

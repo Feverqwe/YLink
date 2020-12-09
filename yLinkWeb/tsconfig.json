@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    "allowJs": true,
+    "strict": true,
+    "noEmit": false,
+    "target": "ES5",
+    "moduleResolution": "Node",
+    "skipLibCheck": true,
+    "outDir": "./dist/"
+  },
+  "include": [
+    "node_modules/serialize-error/*"
+  ]
+}

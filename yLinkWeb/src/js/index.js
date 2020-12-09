@@ -1,8 +1,9 @@
+import('whatwg-fetch');
 import Transport from "./transport";
 import Services from "./services";
 import History from "./history";
 
-const debug = require('debug')('index');
+const debug = require('debug')('app:index');
 
 class Index {
   constructor() {
