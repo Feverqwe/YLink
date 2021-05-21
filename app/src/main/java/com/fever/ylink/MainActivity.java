@@ -5,7 +5,6 @@ import android.content.ClipboardManager;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -99,9 +98,7 @@ public class MainActivity extends AppCompatActivity {
         setStatusText("Loading");
         webView = new WebView(this);
         webView.addJavascriptInterface(new JsObject(), "parent");
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            webView.setWebContentsDebuggingEnabled(true);
-        }
+        webView.setWebContentsDebuggingEnabled(true);
 
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
@@ -343,16 +340,7 @@ public class MainActivity extends AppCompatActivity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    if (Build.VERSION.SDK_INT < 23) {
-                        final String script = "(function(message){window.onmessage({data:JSON.stringify(message)})})(" + msg.toString() + ");";
-                        if (Build.VERSION.SDK_INT < 19) {
-                            webView.loadUrl("javascript:" + script);
-                        } else {
-                            webView.evaluateJavascript(script, null);
-                        }
-                    } else {
-                        webView.postWebMessage(new WebMessage(msg.toString()), Uri.parse("*"));
-                    }
+                    webView.postWebMessage(new WebMessage(msg.toString()), Uri.parse("*"));
                 }
             });
         }
