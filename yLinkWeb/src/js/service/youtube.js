@@ -5,7 +5,8 @@ const getYtMeta = (id) => {
   const url = 'https://www.youtube.com/get_video_info?' + qs.stringify({
     video_id: id,
     eurl: 'https://www.youtube.com/watch?v=' + id,
-    el: 'detailpage'
+    el: 'detailpage',
+    html5: 1,
   });
 
   return fetch(url).then(r => r.text()).then((body) => {

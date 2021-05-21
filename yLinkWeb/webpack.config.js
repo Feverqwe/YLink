@@ -42,7 +42,7 @@ const config = {
             presets: [
               ['@babel/preset-env', {
                 targets: {
-                  browsers: ['Android >= 4']
+                  browsers: ['Android >= 11']
                 },
                 useBuiltIns: 'usage',
                 corejs: 3,
