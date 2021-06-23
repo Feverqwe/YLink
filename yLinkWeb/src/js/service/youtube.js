@@ -1,32 +1,7 @@
+import {fetch} from "whatwg-fetch";
+
 const debug = require('debug')('app:youtube');
 const qs = require('querystring');
-
-const getYtMeta = (id) => {
-  const url = 'https://www.youtube.com/get_video_info?' + qs.stringify({
-    video_id: id,
-    eurl: 'https://www.youtube.com/watch?v=' + id,
-    el: 'detailpage',
-    html5: 1,
-  });
-
-  return fetch(url).then(r => r.text()).then((body) => {
-    return JSON.parse(qs.parse(body).player_response);
-  });
-};
-
-const getYtLinks = (playerResponse) => {
-  const links = [];
-  playerResponse.streamingData.formats.forEach((format) => {
-    if (!format.url) return;
-    links.push({
-      width: format.width,
-      height: format.height,
-      quality: format.qualityLabel,
-      url: format.url,
-    });
-  });
-  return links;
-};
 
 class Youtube {
   getInfo(url) {
@@ -62,6 +37,70 @@ class Youtube {
       return item;
     });
   }
+}
+
+async function getYtMeta(id) {
+  const {key, version} = await getClientInfo();
+
+  const url = 'https://www.youtube.com/youtubei/v1/player?' + qs.stringify({key});
+
+  return fetch(url, {
+    method: 'POST',
+    headers: {
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      videoId: id,
+      context: {
+        client: {
+          hl: 'en',
+          clientName: 'WEB',
+          clientVersion: version,
+        },
+      },
+      playbackContext: {
+        contentPlaybackContext: {
+          referer: 'https://www.youtube.com/embed/' + encodeURIComponent(id),
+        }
+      },
+    })
+  }).then(r => r.json());
+}
+
+function getYtLinks(playerResponse) {
+  const links = [];
+  playerResponse.streamingData.formats.forEach((format) => {
+    if (!format.url) return;
+    links.push({
+      width: format.width,
+      height: format.height,
+      quality: format.qualityLabel,
+      url: format.url,
+    });
+  });
+  return links;
+}
+
+function getClientInfo() {
+  return fetch('https://www.youtube.com/').then((response) => {
+    if (!response.ok) {
+      throw new Error('Incorrect status code ' + response.status);
+    }
+    return response.text();
+  }).then((html) => {
+    let m;
+
+    m = /"INNERTUBE_API_KEY":("[^"]+")/.exec(html);
+    const key = m && JSON.parse(m[1]);
+
+    m = /"INNERTUBE_CLIENT_VERSION":("[^"]+")/.exec(html);
+    const version = m && JSON.parse(m[1]);
+
+    if (!key || !version) {
+      throw new Error('Client info not found');
+    }
+    return {key, version};
+  });
 }
 
 export default Youtube;
