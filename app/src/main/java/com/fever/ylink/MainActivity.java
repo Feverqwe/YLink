@@ -326,12 +326,7 @@ public class MainActivity extends AppCompatActivity {
         Log.d("myApp", "onResume");
 
         Intent intent = getIntent();
-        String type = intent.getType();
-        if (Intent.ACTION_SEND.equals(intent.getAction()) && type != null) {
-            if ("text/plain".equals(type)) {
-                handleSendText(intent); // Handle text being sent
-            }
-        }
+        handleExtraText(intent);
     }
 
     @Override
@@ -341,11 +336,11 @@ public class MainActivity extends AppCompatActivity {
         destroyWebView();
     }
 
-    private void handleSendText(Intent intent) {
-        final String sharedText = intent.getStringExtra(Intent.EXTRA_TEXT);
-        intent.removeExtra(Intent.EXTRA_TEXT);
+    private void handleExtraText(Intent intent) {
+        final String sharedText = intent.getStringExtra("EXTRA_TEXT");
+        intent.removeExtra("EXTRA_TEXT");
 
-        Log.d("myApp", "handleSendText " + sharedText);
+        Log.d("myApp", "handleExtraText " + sharedText);
 
         if (sharedText != null) {
             inputUrl.setText(sharedText);
