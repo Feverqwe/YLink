@@ -1,14 +1,13 @@
 package com.fever.ylink;
 
+import android.annotation.SuppressLint;
 import android.content.ClipData;
 import android.content.ClipboardManager;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
-import android.view.View;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebMessage;
 import android.webkit.WebSettings;
@@ -24,6 +23,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
@@ -31,16 +31,15 @@ public class MainActivity extends AppCompatActivity {
 
     private TextView inputUrl = null;
     private TextView statusBar = null;
-    private TextView emptyTextView = null;
     private ClipboardManager clipboard = null;
 
     private Integer callbackIndex = 0;
-    private HashMap<String, ObjectCallback> cbMap = new HashMap<>();
+    private final HashMap<String, ObjectCallback> cbMap = new HashMap<>();
 
     private WebView webView = null;
 
     private Boolean isReady = false;
-    private List<JSONObject> onReadyMessageStack = new ArrayList<>();
+    private final List<JSONObject> onReadyMessageStack = new ArrayList<>();
 
     interface ObjectCallback {
         void call(Object result, Exception error);
@@ -60,45 +59,34 @@ public class MainActivity extends AppCompatActivity {
         Button btnPaste = (Button) findViewById(R.id.btnPaste);
         Button btnGetLink = (Button) findViewById(R.id.btnGetLink);
 
-        btnClear.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                inputUrl.setText("");
-                destroyWebView();
+        btnClear.setOnClickListener(view -> {
+            inputUrl.setText("");
+            destroyWebView();
+        });
+        btnPaste.setOnClickListener(view -> {
+            ClipData clip = clipboard.getPrimaryClip();
+            if (clip != null && clip.getItemCount() != 0) {
+                int index = 0;
+                ClipData.Item item = clip.getItemAt(index);
+                String text = item.getText().toString();
+                inputUrl.setText(text);
             }
         });
-        btnPaste.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                ClipData clip = clipboard.getPrimaryClip();
-                if (clip != null && clip.getItemCount() != 0) {
-                    Integer index = 0;
-                    ClipData.Item item = clip.getItemAt(index);
-                    String text = item.getText().toString();
-                    inputUrl.setText(text);
-                }
-            }
-        });
-        btnGetLink.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                getUrlLinks(inputUrl.getText().toString());
-            }
-        });
+        btnGetLink.setOnClickListener(view -> getUrlLinks(inputUrl.getText().toString()));
     }
 
     private void getUrlLinks(final String url) {
-        ArrayList args = new ArrayList(){{
-            add(url);
-        }};
+        ArrayList<String> args = new ArrayList<>();
+        args.add(url);
         callFn("getVideoLink", args, null);
     }
 
+    @SuppressLint("SetJavaScriptEnabled")
     private void initWebView() {
         setStatusText("Loading");
+        WebView.setWebContentsDebuggingEnabled(true);
         webView = new WebView(this);
         webView.addJavascriptInterface(new JsObject(), "parent");
-        webView.setWebContentsDebuggingEnabled(true);
 
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
@@ -125,26 +113,17 @@ public class MainActivity extends AppCompatActivity {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(title);
         builder.setMessage(message);
-        builder.setPositiveButton(positiveButton, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                Log.d("openDialog", "True");
-                callback.call(true, null);
-            }
+        builder.setPositiveButton(positiveButton, (dialogInterface, i) -> {
+            Log.d("openDialog", "True");
+            callback.call(true, null);
         });
-        builder.setNegativeButton(negativeButton, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                Log.d("openDialog", "False");
-                callback.call(false, null);
-            }
+        builder.setNegativeButton(negativeButton, (dialogInterface, i) -> {
+            Log.d("openDialog", "False");
+            callback.call(false, null);
         });
-        builder.setOnCancelListener(new DialogInterface.OnCancelListener() {
-            @Override
-            public void onCancel(DialogInterface dialogInterface) {
-                Log.d("openDialog", "Cancel");
-                callback.call(null, new Exception("Canceled"));
-            }
+        builder.setOnCancelListener(dialogInterface -> {
+            Log.d("openDialog", "Cancel");
+            callback.call(null, new Exception("Canceled"));
         });
         builder.show();
     }
@@ -189,12 +168,7 @@ public class MainActivity extends AppCompatActivity {
                     negativeButton = options.getString("negativeButton");
                 }
 
-                openDialog(title, message, positiveButton, negativeButton, new ObjectCallback() {
-                    @Override
-                    public void call(Object result, Exception err) {
-                        postResponseMessage(result, err, callbackId);
-                    }
-                });
+                openDialog(title, message, positiveButton, negativeButton, (result, err) -> postResponseMessage(result, err, callbackId));
                 return true;
             }
             case "openUrl": {
@@ -208,7 +182,7 @@ public class MainActivity extends AppCompatActivity {
                 Intent intent = new Intent(Intent.ACTION_VIEW);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 intent.setDataAndType(Uri.parse(url), mime);
-                startActivity(intent.createChooser(intent, "Chose application"));
+                startActivity(Intent.createChooser(intent, "Chose application"));
             }
         }
         return false;
@@ -224,6 +198,11 @@ public class MainActivity extends AppCompatActivity {
                 String responseId = msgObject.getString("responseId");
                 if (cbMap.containsKey(responseId)) {
                     ObjectCallback callback = cbMap.get(responseId);
+                    if (callback == null) {
+                        Log.d("Callback is not found 2", responseId);
+                        return;
+                    }
+
                     cbMap.remove(responseId);
                     JSONObject message = msgObject.getJSONObject("message");
                     if (message.has("err")) {
@@ -266,7 +245,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void callFn(String fn, ArrayList args, ObjectCallback callback) {
+    private void callFn(String fn, Collection args, ObjectCallback callback) {
         try {
             JSONObject message = new JSONObject();
             message.put("action", "callFn");
@@ -337,12 +316,7 @@ public class MainActivity extends AppCompatActivity {
             }
         } else {
             Log.d("postMessage, send", msg.toString());
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    webView.postWebMessage(new WebMessage(msg.toString()), Uri.parse("*"));
-                }
-            });
+            runOnUiThread(() -> webView.postWebMessage(new WebMessage(msg.toString()), Uri.parse("*")));
         }
     }
 
@@ -380,11 +354,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setStatusText(final String text) {
-        runOnUiThread(new Runnable() {
-            public void run() {
-                statusBar.setText(text);
-            }
-        });
+        runOnUiThread(() -> statusBar.setText(text));
     }
 
     @Override
