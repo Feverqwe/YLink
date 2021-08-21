@@ -92,7 +92,6 @@ public class MainActivity extends AppCompatActivity {
         settings.setJavaScriptEnabled(true);
         settings.setAllowUniversalAccessFromFileURLs(true);
         settings.setDomStorageEnabled(true);
-        settings.setUserAgentString("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36");
 
         webView.loadUrl("file:///android_asset/index.html");
     }
@@ -169,6 +168,34 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 openDialog(title, message, positiveButton, negativeButton, (result, err) -> postResponseMessage(result, err, callbackId));
+                return true;
+            }
+            case "choose": {
+                JSONObject options = args.getJSONObject(0);
+                String title = "";
+                ArrayList<String> list = new ArrayList();
+                // Log.d("choose1", String.valueOf(options));
+                if (options.has("title")) {
+                    title = options.getString("title");
+                }
+                if (options.has("list")) {
+                    JSONArray arr = options.getJSONArray("list");
+                    for (int i = 0; i < arr.length(); i++) {
+                        list.add(arr.getString(i));
+                    }
+                }
+                CharSequence[] charSequenceArray = list.toArray(new CharSequence[0]);
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setTitle(title);
+                builder.setItems(charSequenceArray, (dialog, which) -> {
+                    // Log.d("choose", String.valueOf(which));
+                    postResponseMessage(which, null, callbackId);
+                });
+                builder.setOnCancelListener((dialog) -> {
+                    postResponseMessage(null, null, callbackId);
+                });
+                builder.create();
+                builder.show();
                 return true;
             }
             case "openUrl": {
