@@ -32,9 +32,7 @@ class Youtube {
         throw new Error("Links is not found!");
       }
 
-      const item = links[0];
-
-      return item;
+      return links;
     });
   }
 }
@@ -76,6 +74,7 @@ function getYtLinks(playerResponse) {
       height: format.height,
       quality: format.qualityLabel,
       url: format.url,
+      title: format.qualityLabel,
     });
   });
   return links;

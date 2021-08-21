@@ -29,15 +29,35 @@ class Index {
     this.callFn = this.transport.callFn.bind(this.transport);
     this.callFn('ready');
   }
-  onGetLink(info, item) {
-    return Promise.resolve().then(() => {
-      this.callFn('setStatus', [`${info.type}: ${item.quality ? 'Found ' + item.quality : 'Found!'}`]);
+  async onGetLink(info, items) {
+    let item;
+    if (!Array.isArray(items)) {
+      item = items;
+    } else {
+      const keys = items.map(i => i.title);
+      item = await this.callFn('choose', [{
+        title: 'Choose link',
+        list: keys
+      }]).then((index) => {
+        if (typeof index === "number") {
+          return items[index];
+        } else {
+          return null;
+        }
+      });
+    }
 
-      this.callFn('openUrl', [{
-        url: item.url,
-        mime: item.mime
-      }]);
-    });
+    if (!item) {
+      this.callFn('setStatus', [`Empty choose`]);
+      return;
+    }
+
+    this.callFn('setStatus', [`${info.type}: ${item.quality ? 'Found ' + item.quality : 'Found!'}`]);
+
+    this.callFn('openUrl', [{
+      url: item.url,
+      mime: item.mime
+    }]);
   }
   getInfo(url) {
     return Promise.resolve().then(() => {
@@ -91,8 +111,8 @@ class Index {
             } else {
               return links;
             }
-          }).then(link => {
-            return this.onGetLink(info, link);
+          }).then(links => {
+            return this.onGetLink(info, links);
           });
         }).catch(err => {
           this.callFn('setStatus', [`Error: ${err.message}`]);

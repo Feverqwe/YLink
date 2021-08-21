@@ -52,7 +52,8 @@ const getGoodGameVideoUrl = info => {
       return {
         url: HLS_URL_FORMAT.replace('{0}', stream_id).replace('{1}', suffix),
         quality: parseInt(quality, 10),
-        mime: 'video/m3u8'
+        mime: 'video/m3u8',
+        title: quality,
       };
     }).sort(function (a, b) {
       return a.quality > b.quality ? -1 : 1;
