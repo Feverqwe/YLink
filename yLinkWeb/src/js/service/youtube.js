@@ -28,6 +28,12 @@ class Youtube {
       links.sort((a, b) => {
         return a.height > b.height ? -1 : 1;
       });
+      links.sort((a, b) => {
+        return a.bitrate > b.bitrate ? -1 : 1;
+      });
+      links.sort((a, b) => {
+        return a.typeIndex > b.typeIndex ? -1 : 1;
+      });
       if (!links.length) {
         throw new Error("Links is not found!");
       }
@@ -67,9 +73,12 @@ async function getYtMeta(id) {
 
 function getYtLinks(playerResponse) {
   const links = [];
-  playerResponse.streamingData.formats.forEach((format) => {
+  const {formats, adaptiveFormats, dashManifestUrl, hlsManifestUrl} = playerResponse.streamingData;
+  formats && formats.forEach((format) => {
     if (!format.url) return;
     links.push({
+      type: 'video',
+      typeIndex: 2,
       width: format.width,
       height: format.height,
       quality: format.qualityLabel,
@@ -77,6 +86,40 @@ function getYtLinks(playerResponse) {
       title: format.qualityLabel,
     });
   });
+  adaptiveFormats && adaptiveFormats.forEach((format) => {
+    if (!format.url) return;
+    if (!/^audio\//.test(format.mimeType)) return;
+    const bitrate = Math.round(format.bitrate / 1000);
+    const bitrateLabel = 'Audio ' + bitrate + 'kbps';
+    links.push({
+      type: 'audio',
+      typeIndex: 0,
+      bitrate,
+      quality: bitrateLabel,
+      url: format.url,
+      title: bitrateLabel,
+    });
+  });
+  if (dashManifestUrl) {
+    const qualityLabel = 'DASH';
+    links.push({
+      type: 'stream',
+      typeIndex: 1,
+      quality: qualityLabel,
+      url: dashManifestUrl,
+      title: qualityLabel,
+    });
+  }
+  if (hlsManifestUrl) {
+    const qualityLabel = 'HLS';
+    links.push({
+      type: 'stream',
+      typeIndex: 1,
+      quality: qualityLabel,
+      url: hlsManifestUrl,
+      title: qualityLabel,
+    });
+  }
   return links;
 }
 
