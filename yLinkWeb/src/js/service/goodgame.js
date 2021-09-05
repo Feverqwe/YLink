@@ -1,6 +1,6 @@
 const debug = require('debug')('app:goodgame');
 
-const HLS_URL_FORMAT = "http://hls.goodgame.ru/hls/{0}{1}.m3u8";
+const HLS_URL_FORMAT = "https://hlss.goodgame.ru/hls/{0}{1}.m3u8";
 const QUALITIES_SUFFIX = {
   "1080": "",
   "720": "_720",
@@ -27,18 +27,21 @@ const getStreamId = function (url) {
 };
 
 const getValidLink = function (links) {
-  let promise = Promise.reject();
-  links.forEach(function (item) {
-    promise = promise.catch(function () {
-      return fetch(item.url, {
-        method: 'HEAD'
-      }).then(response => {
-        return item;
-      });
+  return Promise.all(links.map((item) => {
+    return fetch(item.url, {
+      method: 'HEAD'
+    }).then((response) => {
+      return item;
+    }, (err) => {
+      debug('Request link error: %O', err);
+      return null;
     });
-  });
-  return promise.catch(function () {
-    throw new Error("Stream checking error!");
+  })).then((results) => {
+    const r = results.filter(item => !!item);
+    if (!r.length) {
+      throw new Error("Stream checking error!");
+    }
+    return r;
   });
 };
 
@@ -73,7 +76,7 @@ class Goodgame {
         result = {};
         result.type = 'goodgame';
         result.id = m[2];
-        result.url = 'http:' + m[1];
+        result.url = 'https:' + m[1];
         return true;
       }
     });
