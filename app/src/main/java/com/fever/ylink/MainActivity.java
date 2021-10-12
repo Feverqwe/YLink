@@ -73,8 +73,11 @@ public class MainActivity extends AppCompatActivity {
             if (clip != null && clip.getItemCount() != 0) {
                 int index = 0;
                 ClipData.Item item = clip.getItemAt(index);
-                String text = item.getText().toString();
-                inputUrl.setText(text);
+                CharSequence chars = item.getText();
+                if (chars != null) {
+                    String text = chars.toString();
+                    inputUrl.setText(text);
+                }
             }
         });
         btnGetLink.setOnClickListener(view -> getUrlLinks(inputUrl.getText().toString()));
