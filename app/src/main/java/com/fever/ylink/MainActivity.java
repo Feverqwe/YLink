@@ -3,6 +3,7 @@ package com.fever.ylink;
 import android.annotation.SuppressLint;
 import android.content.ClipData;
 import android.content.ClipboardManager;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -15,6 +16,7 @@ import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -210,6 +212,13 @@ public class MainActivity extends AppCompatActivity {
                 if (copySwitch.isChecked()) {
                     ClipData clip = ClipData.newUri(getContentResolver(), "Url", Uri.parse(url));
                     clipboard.setPrimaryClip(clip);
+
+                    Context context = getApplicationContext();
+                    CharSequence text = "Copied!";
+                    int duration = Toast.LENGTH_SHORT;
+
+                    Toast toast = Toast.makeText(context, text, duration);
+                    toast.show();
                 } else {
                     String mime = "video/*";
                     if (options.has("mime")) {
