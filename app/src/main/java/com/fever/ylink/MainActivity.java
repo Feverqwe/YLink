@@ -13,6 +13,7 @@ import android.webkit.WebMessage;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.Button;
+import android.widget.Switch;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AlertDialog;
@@ -32,6 +33,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView inputUrl = null;
     private TextView statusBar = null;
     private ClipboardManager clipboard = null;
+    private Switch copySwitch = null;
 
     private Integer callbackIndex = 0;
     private final HashMap<String, ObjectCallback> cbMap = new HashMap<>();
@@ -54,6 +56,7 @@ public class MainActivity extends AppCompatActivity {
         inputUrl = (TextView) findViewById(R.id.inpURL);
         statusBar = (TextView) findViewById(R.id.statusBar);
         clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+        copySwitch = (Switch) findViewById(R.id.switch1);
 
         Button btnClear = (Button) findViewById(R.id.btnClear);
         Button btnPaste = (Button) findViewById(R.id.btnPaste);
@@ -203,15 +206,21 @@ public class MainActivity extends AppCompatActivity {
             case "openUrl": {
                 JSONObject options = args.getJSONObject(0);
                 String url = options.getString("url");
-                String mime = "video/*";
-                if (options.has("mime")) {
-                    mime = options.getString("mime");
-                }
 
-                Intent intent = new Intent(Intent.ACTION_VIEW);
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                intent.setDataAndType(Uri.parse(url), mime);
-                startActivity(Intent.createChooser(intent, "Chose application"));
+                if (copySwitch.isChecked()) {
+                    ClipData clip = ClipData.newUri(getContentResolver(), "Url", Uri.parse(url));
+                    clipboard.setPrimaryClip(clip);
+                } else {
+                    String mime = "video/*";
+                    if (options.has("mime")) {
+                        mime = options.getString("mime");
+                    }
+
+                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    intent.setDataAndType(Uri.parse(url), mime);
+                    startActivity(Intent.createChooser(intent, "Chose application"));
+                }
             }
         }
         return false;
