@@ -58,7 +58,7 @@ async function getYtMeta(id) {
       context: {
         client: {
           hl: 'en',
-          clientName: 'ANDROID',
+          clientName: 'WEB',
           clientVersion: version,
         },
       },
