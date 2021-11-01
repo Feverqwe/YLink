@@ -1,5 +1,5 @@
 const debug = require('debug')('app:twitch');
-const qs = require('querystring');
+const qs = require('querystring-es3');
 
 const getToken = function (info, type) {
   let url = 'https://api.twitch.tv';

@@ -1,4 +1,3 @@
-import('whatwg-fetch');
 import Transport from "./transport";
 import Services from "./services";
 import History from "./history";

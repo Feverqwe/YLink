@@ -1,7 +1,7 @@
-import {fetch} from "whatwg-fetch";
+import getSpeedFixFn from "./youtube/getSpeedFixFn";
 
 const debug = require('debug')('app:youtube');
-const qs = require('querystring');
+const qs = require('querystring-es3');
 
 class Youtube {
   getInfo(url) {
@@ -22,33 +22,37 @@ class Youtube {
     return result;
   }
 
-  getLinks(info) {
-    return getYtMeta(info.id).then((playerResponse) => {
-      const links = getYtLinks(playerResponse);
-      links.sort((a, b) => {
-        return a.height > b.height ? -1 : 1;
-      });
-      links.sort((a, b) => {
-        return a.bitrate > b.bitrate ? -1 : 1;
-      });
-      links.sort((a, b) => {
-        return a.typeIndex > b.typeIndex ? -1 : 1;
-      });
-      if (!links.length) {
-        throw new Error("Links is not found!");
-      }
-
-      return links;
+  async getLinks(info) {
+    const {playerResponse, speedFixFn} = await getYtMeta(info.id);
+    const links = getYtLinks(playerResponse, speedFixFn);
+    links.sort((a, b) => {
+      return a.height > b.height ? -1 : 1;
     });
+    links.sort((a, b) => {
+      return a.bitrate > b.bitrate ? -1 : 1;
+    });
+    links.sort((a, b) => {
+      return a.typeIndex > b.typeIndex ? -1 : 1;
+    });
+    if (!links.length) {
+      throw new Error("Links is not found!");
+    }
+
+    return links;
   }
 }
 
 async function getYtMeta(id) {
-  const {key, version} = await getClientInfo();
+  const {key, version, playerUrl} = await getClientInfo();
+
+  const speedFixFn = await getSpeedFixFn(playerUrl).catch((err) => {
+    debug('getSpeedFixFn error: %o', err);
+    return null;
+  });
 
   const url = 'https://www.youtube.com/youtubei/v1/player?' + qs.stringify({key});
 
-  return fetch(url, {
+  const response = await fetch(url, {
     method: 'POST',
     headers: {
       "content-type": "application/json",
@@ -68,10 +72,14 @@ async function getYtMeta(id) {
         }
       },
     })
-  }).then(r => r.json());
+  });
+
+  const playerResponse = await response.json();
+
+  return {playerResponse, speedFixFn};
 }
 
-function getYtLinks(playerResponse) {
+function getYtLinks(playerResponse, speedFixFn) {
   const links = [];
   const {formats, adaptiveFormats, dashManifestUrl, hlsManifestUrl} = playerResponse.streamingData;
   formats && formats.forEach((format) => {
@@ -82,7 +90,7 @@ function getYtLinks(playerResponse) {
       width: format.width,
       height: format.height,
       quality: format.qualityLabel,
-      url: format.url,
+      url: fixUrl(format.url),
       title: format.qualityLabel,
     });
   });
@@ -96,7 +104,7 @@ function getYtLinks(playerResponse) {
       typeIndex: 0,
       bitrate,
       quality: bitrateLabel,
-      url: format.url,
+      url: fixUrl(format.url),
       title: bitrateLabel,
     });
   });
@@ -121,28 +129,41 @@ function getYtLinks(playerResponse) {
     });
   }
   return links;
+
+  function fixUrl(url) {
+    if (!speedFixFn) return url;
+    return speedFixFn(url);
+  }
 }
 
-function getClientInfo() {
-  return fetch('https://www.youtube.com/').then((response) => {
-    if (!response.ok) {
-      throw new Error('Incorrect status code ' + response.status);
-    }
-    return response.text();
-  }).then((html) => {
-    let m;
+async function getClientInfo() {
+  const response = await fetch('https://www.youtube.com/')
+  if (!response.ok) {
+    throw new Error('Incorrect status code ' + response.status);
+  }
+  const html = await response.text();
 
-    m = /"INNERTUBE_API_KEY":("[^"]+")/.exec(html);
-    const key = m && JSON.parse(m[1]);
+  let m;
 
-    m = /"INNERTUBE_CLIENT_VERSION":("[^"]+")/.exec(html);
-    const version = m && JSON.parse(m[1]);
+  m = /"INNERTUBE_API_KEY":("[^"]+")/.exec(html);
+  const key = m && JSON.parse(m[1]);
+  m = /"INNERTUBE_CLIENT_VERSION":("[^"]+")/.exec(html);
+  const version = m && JSON.parse(m[1]);
+  if (!key || !version) {
+    throw new Error('Client info not found');
+  }
 
-    if (!key || !version) {
-      throw new Error('Client info not found');
-    }
-    return {key, version};
-  });
+  let playerUrl;
+  m = /"jsUrl":("[^"]+")/.exec(html);
+  if (m) {
+    playerUrl = JSON.parse(m[1]);
+    playerUrl = new URL(playerUrl, response.url);
+  }
+  if (!playerUrl) {
+    throw new Error('playerUrl is empty');
+  }
+
+  return {key, version, playerUrl};
 }
 
 export default Youtube;
