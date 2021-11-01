@@ -10,3 +10,5 @@
 /yLinkWeb/node_modules
 /app/build/reports
 /app/build/outputs/mapping
+__tests__
+/yLinkWeb/dist
