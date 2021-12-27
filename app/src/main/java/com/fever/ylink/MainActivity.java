@@ -213,7 +213,7 @@ public class MainActivity extends AppCompatActivity {
                 String url = options.getString("url");
 
                 if (copySwitch.isChecked()) {
-                    ClipData clip = ClipData.newUri(getContentResolver(), "Url", Uri.parse(url));
+                    ClipData clip = ClipData.newPlainText(url, url);
                     clipboard.setPrimaryClip(clip);
 
                     Context context = getApplicationContext();
