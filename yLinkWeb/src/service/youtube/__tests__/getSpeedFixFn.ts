@@ -21,6 +21,8 @@ test('getSigFn', async () => {
 test('getCurrentSigFn', async () => {
   const {playerUrl} = await getClientInfo();
 
+  console.log('playerUrl', playerUrl.toString());
+
   const body = await fetch(playerUrl).then((r: any) => r.text());
 
   const code = body.toString();

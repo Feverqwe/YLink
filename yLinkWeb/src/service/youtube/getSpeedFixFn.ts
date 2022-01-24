@@ -8,15 +8,13 @@ async function getSpeedFixFn(playerUrl: string) {
 
   return (url: string) => {
     const uri = new URL(url);
-    try {
-      const n = uri.searchParams.get('n');
-      if (n) {
-        uri.searchParams.set('n', sigFn(n));
-      }
-    } catch (err) {
-      debug('User sig fn error: %O', err);
+    const n = uri.searchParams.get('n');
+    let status = null;
+    if (n) {
+      status = true;
+      uri.searchParams.set('n', sigFn(n));
     }
-    return uri.toString();
+    return {status, url: uri.toString()};
   }
 }
 
@@ -27,7 +25,9 @@ export function getSigFn(code: string) {
   }
   const name = m[1];
 
-  code = code.replace(new RegExp(`([;\\n]${name})(=function)`, ''), "$1=__result__.sigFn$2");
+  code = code
+    .replace('var window=this;', 'var window=self;')
+    .replace(new RegExp(`([;\\n]${name})(=function)`, ''), "$1=__result__.sigFn$2");
 
   const fn = new Function('', `
   const __result__ = {};
@@ -35,6 +35,7 @@ export function getSigFn(code: string) {
   const location = {hostname:'a'};
   const document = {location,domain:'a'};
   const window = {document,location};
+  const self = window;
   ${code};
   return __result__.sigFn;
 `)();

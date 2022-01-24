@@ -48,7 +48,9 @@ async function getYtMeta(id) {
 
   const speedFixFn = await getSpeedFixFn(playerUrl).catch((err) => {
     debug('getSpeedFixFn error: %o', err);
-    return null;
+    return () => {
+      throw new Error('getSpeedFixFn fail');
+    };
   });
 
   const url = 'https://www.youtube.com/youtubei/v1/player?' + qs.stringify({key});
@@ -85,14 +87,19 @@ function getYtLinks(playerResponse, speedFixFn) {
   const {formats, adaptiveFormats, dashManifestUrl, hlsManifestUrl} = playerResponse.streamingData;
   formats && formats.forEach((format) => {
     if (!format.url) return;
+    const {status, url} = fixUrl(format.url);
+    let title = format.qualityLabel;
+    if (status === false) {
+      title += ' slow';
+    }
     links.push({
       type: 'video',
       typeIndex: 2,
       width: format.width,
       height: format.height,
       quality: format.qualityLabel,
-      url: fixUrl(format.url),
-      title: format.qualityLabel,
+      url,
+      title,
     });
   });
   adaptiveFormats && adaptiveFormats.forEach((format) => {
@@ -100,13 +107,18 @@ function getYtLinks(playerResponse, speedFixFn) {
     if (!/^audio\//.test(format.mimeType)) return;
     const bitrate = Math.round(format.bitrate / 1000);
     const bitrateLabel = 'Audio ' + bitrate + 'kbps';
+    const {status, url} = fixUrl(format.url);
+    let title = bitrateLabel;
+    if (status === false) {
+      title += ' slow';
+    }
     links.push({
       type: 'audio',
       typeIndex: 0,
       bitrate,
       quality: bitrateLabel,
-      url: fixUrl(format.url),
-      title: bitrateLabel,
+      url,
+      title,
     });
   });
   if (dashManifestUrl) {
@@ -132,8 +144,11 @@ function getYtLinks(playerResponse, speedFixFn) {
   return links;
 
   function fixUrl(url) {
-    if (!speedFixFn) return url;
-    return speedFixFn(url);
+    try {
+      return speedFixFn(url);
+    } catch (err) {
+      return {status: false, url};
+    }
   }
 }
 
