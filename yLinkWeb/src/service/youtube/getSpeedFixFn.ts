@@ -23,8 +23,10 @@ const codeData = function () {
   const navigator = {};
   const location = {hostname: 'a'};
   const document = {location, domain: 'a'};
-  /* @ts-ignore */
-  Object.assign(this, {document, location, navigator});
+  try {
+    /* @ts-ignore */
+    Object.assign(this, {document, location, navigator});
+  } catch (err) {}
   const XMLHttpRequest = class {
     fetch(...args: any[]) {
 
