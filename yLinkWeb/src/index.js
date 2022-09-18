@@ -2,7 +2,7 @@ import Transport from "./transport";
 import Services from "./services";
 import History from "./history";
 
-const debug = require('debug')('app:index');
+const debug = console.error.bind(console, 'app:index');
 
 class Index {
   constructor() {

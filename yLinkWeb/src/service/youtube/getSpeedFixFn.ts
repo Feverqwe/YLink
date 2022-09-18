@@ -1,4 +1,4 @@
-const debug = require('debug')('app:getSpeedFixFn');
+const debug = console.error.bind(console, 'app:getSpeedFixFn');
 
 async function getSpeedFixFn(playerUrl: string) {
   const response = await fetch(playerUrl);
@@ -42,7 +42,9 @@ const afterCodeData = function () {
     a.set('n', 'true');
     /* @ts-ignore */
     _yt_player.YB.prototype.get.call(a);
-  }catch(_e){}
+  }catch(err){
+    console.error('run error', err);
+  }
   /* @ts-ignore */
   if (Array.isArray(__result__.sigFn)) {
     /* @ts-ignore */

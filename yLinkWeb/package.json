@@ -27,7 +27,6 @@
     "webpack-cli": "^4.9.1"
   },
   "dependencies": {
-    "debug": "^4.3.2",
     "querystring-es3": "^0.2.1",
     "serialize-error": "^8.1.0"
   }

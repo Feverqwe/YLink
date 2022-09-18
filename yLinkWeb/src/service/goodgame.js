@@ -1,4 +1,4 @@
-const debug = require('debug')('app:goodgame');
+const debug = console.error.bind(console, 'app:goodgame');
 
 const HLS_URL_FORMAT = "https://hlss.goodgame.ru/hls/{0}{1}.m3u8";
 const QUALITIES_SUFFIX = {

@@ -12,7 +12,9 @@ module.exports = {
       },
     ],
   },
-  plugins: [new HtmlWebpackPlugin()],
+  plugins: [
+    new HtmlWebpackPlugin(),
+  ],
   resolve: {
     extensions: ['.ts', '.js'],
   },

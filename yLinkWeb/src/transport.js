@@ -1,4 +1,4 @@
-const debug = require('debug')('app:frameWorker');
+const debug = console.error.bind(console, 'app:frameWorker');
 import {serializeError, deserializeError} from 'serialize-error';
 
 const emptyFn = () => {};

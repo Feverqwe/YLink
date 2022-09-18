@@ -1,7 +1,7 @@
 import getSpeedFixFn from "./youtube/getSpeedFixFn";
 import getClientInfo from "./youtube/getClientInfo";
 
-const debug = require('debug')('app:youtube');
+const debug = console.error.bind(console, 'app:youtube');
 const qs = require('querystring-es3');
 
 class Youtube {

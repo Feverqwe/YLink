@@ -1,4 +1,4 @@
-const debug = require('debug')('app:twitch');
+const debug = console.error.bind(console, 'app:twitch');
 const qs = require('querystring-es3');
 
 const getToken = function (info, type) {
