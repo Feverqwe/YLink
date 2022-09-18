@@ -1,1 +1,1454 @@
-(()=>{var e={227:(e,t,n)=>{t.formatArgs=function(t){if(t[0]=(this.useColors?"%c":"")+this.namespace+(this.useColors?" %c":" ")+t[0]+(this.useColors?"%c ":" ")+"+"+e.exports.humanize(this.diff),!this.useColors)return;const n="color: "+this.color;t.splice(1,0,n,"color: inherit");let r=0,o=0;t[0].replace(/%[a-zA-Z%]/g,(e=>{"%%"!==e&&(r++,"%c"===e&&(o=r))})),t.splice(o,0,n)},t.save=function(e){try{e?t.storage.setItem("debug",e):t.storage.removeItem("debug")}catch(e){}},t.load=function(){let e;try{e=t.storage.getItem("debug")}catch(e){}return!e&&"undefined"!=typeof process&&"env"in process&&(e=process.env.DEBUG),e},t.useColors=function(){return!("undefined"==typeof window||!window.process||"renderer"!==window.process.type&&!window.process.__nwjs)||("undefined"==typeof navigator||!navigator.userAgent||!navigator.userAgent.toLowerCase().match(/(edge|trident)\/(\d+)/))&&("undefined"!=typeof document&&document.documentElement&&document.documentElement.style&&document.documentElement.style.WebkitAppearance||"undefined"!=typeof window&&window.console&&(window.console.firebug||window.console.exception&&window.console.table)||"undefined"!=typeof navigator&&navigator.userAgent&&navigator.userAgent.toLowerCase().match(/firefox\/(\d+)/)&&parseInt(RegExp.$1,10)>=31||"undefined"!=typeof navigator&&navigator.userAgent&&navigator.userAgent.toLowerCase().match(/applewebkit\/(\d+)/))},t.storage=function(){try{return localStorage}catch(e){}}(),t.destroy=(()=>{let e=!1;return()=>{e||(e=!0,console.warn("Instance method `debug.destroy()` is deprecated and no longer does anything. It will be removed in the next major version of `debug`."))}})(),t.colors=["#0000CC","#0000FF","#0033CC","#0033FF","#0066CC","#0066FF","#0099CC","#0099FF","#00CC00","#00CC33","#00CC66","#00CC99","#00CCCC","#00CCFF","#3300CC","#3300FF","#3333CC","#3333FF","#3366CC","#3366FF","#3399CC","#3399FF","#33CC00","#33CC33","#33CC66","#33CC99","#33CCCC","#33CCFF","#6600CC","#6600FF","#6633CC","#6633FF","#66CC00","#66CC33","#9900CC","#9900FF","#9933CC","#9933FF","#99CC00","#99CC33","#CC0000","#CC0033","#CC0066","#CC0099","#CC00CC","#CC00FF","#CC3300","#CC3333","#CC3366","#CC3399","#CC33CC","#CC33FF","#CC6600","#CC6633","#CC9900","#CC9933","#CCCC00","#CCCC33","#FF0000","#FF0033","#FF0066","#FF0099","#FF00CC","#FF00FF","#FF3300","#FF3333","#FF3366","#FF3399","#FF33CC","#FF33FF","#FF6600","#FF6633","#FF9900","#FF9933","#FFCC00","#FFCC33"],t.log=console.debug||console.log||(()=>{}),e.exports=n(447)(t);const{formatters:r}=e.exports;r.j=function(e){try{return JSON.stringify(e)}catch(e){return"[UnexpectedJSONParseError]: "+e.message}}},447:(e,t,n)=>{e.exports=function(e){function t(e){let n,o,s,i=null;function a(...e){if(!a.enabled)return;const r=a,o=Number(new Date),s=o-(n||o);r.diff=s,r.prev=n,r.curr=o,n=o,e[0]=t.coerce(e[0]),"string"!=typeof e[0]&&e.unshift("%O");let i=0;e[0]=e[0].replace(/%([a-zA-Z%])/g,((n,o)=>{if("%%"===n)return"%";i++;const s=t.formatters[o];if("function"==typeof s){const t=e[i];n=s.call(r,t),e.splice(i,1),i--}return n})),t.formatArgs.call(r,e),(r.log||t.log).apply(r,e)}return a.namespace=e,a.useColors=t.useColors(),a.color=t.selectColor(e),a.extend=r,a.destroy=t.destroy,Object.defineProperty(a,"enabled",{enumerable:!0,configurable:!1,get:()=>null!==i?i:(o!==t.namespaces&&(o=t.namespaces,s=t.enabled(e)),s),set:e=>{i=e}}),"function"==typeof t.init&&t.init(a),a}function r(e,n){const r=t(this.namespace+(void 0===n?":":n)+e);return r.log=this.log,r}function o(e){return e.toString().substring(2,e.toString().length-2).replace(/\.\*\?$/,"*")}return t.debug=t,t.default=t,t.coerce=function(e){return e instanceof Error?e.stack||e.message:e},t.disable=function(){const e=[...t.names.map(o),...t.skips.map(o).map((e=>"-"+e))].join(",");return t.enable(""),e},t.enable=function(e){let n;t.save(e),t.namespaces=e,t.names=[],t.skips=[];const r=("string"==typeof e?e:"").split(/[\s,]+/),o=r.length;for(n=0;n<o;n++)r[n]&&("-"===(e=r[n].replace(/\*/g,".*?"))[0]?t.skips.push(new RegExp("^"+e.substr(1)+"$")):t.names.push(new RegExp("^"+e+"$")))},t.enabled=function(e){if("*"===e[e.length-1])return!0;let n,r;for(n=0,r=t.skips.length;n<r;n++)if(t.skips[n].test(e))return!1;for(n=0,r=t.names.length;n<r;n++)if(t.names[n].test(e))return!0;return!1},t.humanize=n(824),t.destroy=function(){console.warn("Instance method `debug.destroy()` is deprecated and no longer does anything. It will be removed in the next major version of `debug`.")},Object.keys(e).forEach((n=>{t[n]=e[n]})),t.names=[],t.skips=[],t.formatters={},t.selectColor=function(e){let n=0;for(let t=0;t<e.length;t++)n=(n<<5)-n+e.charCodeAt(t),n|=0;return t.colors[Math.abs(n)%t.colors.length]},t.enable(t.load()),t}},824:e=>{var t=1e3,n=60*t,r=60*n,o=24*r;function s(e,t,n,r){var o=t>=1.5*n;return Math.round(e/n)+" "+r+(o?"s":"")}e.exports=function(e,i){i=i||{};var a,c,u=typeof e;if("string"===u&&e.length>0)return function(e){if(!((e=String(e)).length>100)){var s=/^(-?(?:\d+)?\.?\d+) *(milliseconds?|msecs?|ms|seconds?|secs?|s|minutes?|mins?|m|hours?|hrs?|h|days?|d|weeks?|w|years?|yrs?|y)?$/i.exec(e);if(s){var i=parseFloat(s[1]);switch((s[2]||"ms").toLowerCase()){case"years":case"year":case"yrs":case"yr":case"y":return 315576e5*i;case"weeks":case"week":case"w":return 6048e5*i;case"days":case"day":case"d":return i*o;case"hours":case"hour":case"hrs":case"hr":case"h":return i*r;case"minutes":case"minute":case"mins":case"min":case"m":return i*n;case"seconds":case"second":case"secs":case"sec":case"s":return i*t;case"milliseconds":case"millisecond":case"msecs":case"msec":case"ms":return i;default:return}}}}(e);if("number"===u&&isFinite(e))return i.long?(a=e,(c=Math.abs(a))>=o?s(a,c,o,"day"):c>=r?s(a,c,r,"hour"):c>=n?s(a,c,n,"minute"):c>=t?s(a,c,t,"second"):a+" ms"):function(e){var s=Math.abs(e);return s>=o?Math.round(e/o)+"d":s>=r?Math.round(e/r)+"h":s>=n?Math.round(e/n)+"m":s>=t?Math.round(e/t)+"s":e+"ms"}(e);throw new Error("val is not a non-empty string or a valid number. val="+JSON.stringify(e))}},335:e=>{"use strict";function t(e,t){return Object.prototype.hasOwnProperty.call(e,t)}e.exports=function(e,r,o,s){r=r||"&",o=o||"=";var i={};if("string"!=typeof e||0===e.length)return i;var a=/\+/g;e=e.split(r);var c=1e3;s&&"number"==typeof s.maxKeys&&(c=s.maxKeys);var u=e.length;c>0&&u>c&&(u=c);for(var l=0;l<u;++l){var h,p,f,d,y=e[l].replace(a,"%20"),m=y.indexOf(o);m>=0?(h=y.substr(0,m),p=y.substr(m+1)):(h=y,p=""),f=decodeURIComponent(h),d=decodeURIComponent(p),t(i,f)?n(i[f])?i[f].push(d):i[f]=[i[f],d]:i[f]=d}return i};var n=Array.isArray||function(e){return"[object Array]"===Object.prototype.toString.call(e)}},795:e=>{"use strict";var t=function(e){switch(typeof e){case"string":return e;case"boolean":return e?"true":"false";case"number":return isFinite(e)?e:"";default:return""}};e.exports=function(e,s,i,a){return s=s||"&",i=i||"=",null===e&&(e=void 0),"object"==typeof e?r(o(e),(function(o){var a=encodeURIComponent(t(o))+i;return n(e[o])?r(e[o],(function(e){return a+encodeURIComponent(t(e))})).join(s):a+encodeURIComponent(t(e[o]))})).join(s):a?encodeURIComponent(t(a))+i+encodeURIComponent(t(e)):""};var n=Array.isArray||function(e){return"[object Array]"===Object.prototype.toString.call(e)};function r(e,t){if(e.map)return e.map(t);for(var n=[],r=0;r<e.length;r++)n.push(t(e[r],r));return n}var o=Object.keys||function(e){var t=[];for(var n in e)Object.prototype.hasOwnProperty.call(e,n)&&t.push(n);return t}},735:(e,t,n)=>{"use strict";t.decode=t.parse=n(335),t.encode=t.stringify=n(795)},710:e=>{"use strict";class t extends Error{constructor(e){super(t._prepareSuperMessage(e)),Object.defineProperty(this,"name",{value:"NonError",configurable:!0,writable:!0}),Error.captureStackTrace&&Error.captureStackTrace(this,t)}static _prepareSuperMessage(e){try{return JSON.stringify(e)}catch{return String(e)}}}const n=[{property:"name",enumerable:!1},{property:"message",enumerable:!1},{property:"stack",enumerable:!1},{property:"code",enumerable:!0}],r=Symbol(".toJSON called"),o=({from:e,seen:t,to_:s,forceEnumerable:i,maxDepth:a,depth:c})=>{const u=s||(Array.isArray(e)?[]:{});if(t.push(e),c>=a)return u;if("function"==typeof e.toJSON&&!0!==e[r])return(e=>{e[r]=!0;const t=e.toJSON();return delete e[r],t})(e);for(const[n,r]of Object.entries(e))"function"==typeof Buffer&&Buffer.isBuffer(r)?u[n]="[object Buffer]":"function"!=typeof r&&(r&&"object"==typeof r?t.includes(e[n])?u[n]="[Circular]":(c++,u[n]=o({from:e[n],seen:t.slice(),forceEnumerable:i,maxDepth:a,depth:c})):u[n]=r);for(const{property:t,enumerable:r}of n)"string"==typeof e[t]&&Object.defineProperty(u,t,{value:e[t],enumerable:!!i||r,configurable:!0,writable:!0});return u};e.exports={serializeError:(e,t={})=>{const{maxDepth:n=Number.POSITIVE_INFINITY}=t;return"object"==typeof e&&null!==e?o({from:e,seen:[],forceEnumerable:!0,maxDepth:n,depth:0}):"function"==typeof e?`[Function: ${e.name||"anonymous"}]`:e},deserializeError:(e,n={})=>{const{maxDepth:r=Number.POSITIVE_INFINITY}=n;if(e instanceof Error)return e;if("object"==typeof e&&null!==e&&!Array.isArray(e)){const t=new Error;return o({from:e,seen:[],to_:t,maxDepth:r,depth:0}),t}return new t(e)}}},925:function(e,t){"use strict";var n=this&&this.__awaiter||function(e,t,n,r){return new(n||(n=Promise))((function(o,s){function i(e){try{c(r.next(e))}catch(e){s(e)}}function a(e){try{c(r.throw(e))}catch(e){s(e)}}function c(e){var t;e.done?o(e.value):(t=e.value,t instanceof n?t:new n((function(e){e(t)}))).then(i,a)}c((r=r.apply(e,t||[])).next())}))},r=this&&this.__generator||function(e,t){var n,r,o,s,i={label:0,sent:function(){if(1&o[0])throw o[1];return o[1]},trys:[],ops:[]};return s={next:a(0),throw:a(1),return:a(2)},"function"==typeof Symbol&&(s[Symbol.iterator]=function(){return this}),s;function a(s){return function(a){return function(s){if(n)throw new TypeError("Generator is already executing.");for(;i;)try{if(n=1,r&&(o=2&s[0]?r.return:s[0]?r.throw||((o=r.return)&&o.call(r),0):r.next)&&!(o=o.call(r,s[1])).done)return o;switch(r=0,o&&(s=[2&s[0],o.value]),s[0]){case 0:case 1:o=s;break;case 4:return i.label++,{value:s[1],done:!1};case 5:i.label++,r=s[1],s=[0];continue;case 7:s=i.ops.pop(),i.trys.pop();continue;default:if(!((o=(o=i.trys).length>0&&o[o.length-1])||6!==s[0]&&2!==s[0])){i=0;continue}if(3===s[0]&&(!o||s[1]>o[0]&&s[1]<o[3])){i.label=s[1];break}if(6===s[0]&&i.label<o[1]){i.label=o[1],o=s;break}if(o&&i.label<o[2]){i.label=o[2],i.ops.push(s);break}o[2]&&i.ops.pop(),i.trys.pop();continue}s=t.call(e,i)}catch(e){s=[6,e],r=0}finally{n=o=0}if(5&s[0])throw s[1];return{value:s[0]?s[1]:void 0,done:!0}}([s,a])}}};Object.defineProperty(t,"__esModule",{value:!0}),t.default=function(){return n(this,void 0,void 0,(function(){var e,t,n,o,s,i;return r(this,(function(r){switch(r.label){case 0:return[4,fetch("https://www.youtube.com/")];case 1:if(!(e=r.sent()).ok)throw new Error("Incorrect status code "+e.status);return[4,e.text()];case 2:if(t=r.sent(),n=/"INNERTUBE_API_KEY":("[^"]+")/.exec(t),o=n&&JSON.parse(n[1]),n=/"INNERTUBE_CLIENT_VERSION":("[^"]+")/.exec(t),s=n&&JSON.parse(n[1]),!o||!s)throw new Error("Client info not found");if((n=/"jsUrl":("[^"]+")/.exec(t))&&(i=JSON.parse(n[1]),i=new URL(i,e.url)),!i)throw new Error("playerUrl is empty");return[2,{key:o,version:s,playerUrl:i}]}}))}))}},182:function(e,t,n){"use strict";var r=this&&this.__awaiter||function(e,t,n,r){return new(n||(n=Promise))((function(o,s){function i(e){try{c(r.next(e))}catch(e){s(e)}}function a(e){try{c(r.throw(e))}catch(e){s(e)}}function c(e){var t;e.done?o(e.value):(t=e.value,t instanceof n?t:new n((function(e){e(t)}))).then(i,a)}c((r=r.apply(e,t||[])).next())}))},o=this&&this.__generator||function(e,t){var n,r,o,s,i={label:0,sent:function(){if(1&o[0])throw o[1];return o[1]},trys:[],ops:[]};return s={next:a(0),throw:a(1),return:a(2)},"function"==typeof Symbol&&(s[Symbol.iterator]=function(){return this}),s;function a(s){return function(a){return function(s){if(n)throw new TypeError("Generator is already executing.");for(;i;)try{if(n=1,r&&(o=2&s[0]?r.return:s[0]?r.throw||((o=r.return)&&o.call(r),0):r.next)&&!(o=o.call(r,s[1])).done)return o;switch(r=0,o&&(s=[2&s[0],o.value]),s[0]){case 0:case 1:o=s;break;case 4:return i.label++,{value:s[1],done:!1};case 5:i.label++,r=s[1],s=[0];continue;case 7:s=i.ops.pop(),i.trys.pop();continue;default:if(!((o=(o=i.trys).length>0&&o[o.length-1])||6!==s[0]&&2!==s[0])){i=0;continue}if(3===s[0]&&(!o||s[1]>o[0]&&s[1]<o[3])){i.label=s[1];break}if(6===s[0]&&i.label<o[1]){i.label=o[1],o=s;break}if(o&&i.label<o[2]){i.label=o[2],i.ops.push(s);break}o[2]&&i.ops.pop(),i.trys.pop();continue}s=t.call(e,i)}catch(e){s=[6,e],r=0}finally{n=o=0}if(5&s[0])throw s[1];return{value:s[0]?s[1]:void 0,done:!0}}([s,a])}}};function s(e){var t=/\([$\w]+=([$\w]+)\([$\w]+\),[$\w]+\.set\("n",/.exec(e);if(!t)throw new Error("Sig fn name not found");var n=t[1];e=e.replace("var window=this;","var window=self;").replace(new RegExp("([;\\n]".concat(n,")(=function)"),""),"$1=__result__.sigFn$2");var r=new Function("","\n  const __result__ = {};\n  const navigator = {};\n  const location = {hostname:'a'};\n  const document = {location,domain:'a'};\n  const window = {document,location};\n  const self = window;\n  ".concat(e,";\n  return __result__.sigFn;\n"))();if("function"!=typeof r)throw new Error("Sig fn is not found");return r}Object.defineProperty(t,"__esModule",{value:!0}),t.getSigFn=void 0,n(227)("app:getSpeedFixFn"),t.getSigFn=s,t.default=function(e){return r(this,void 0,void 0,(function(){var t,n;return o(this,(function(r){switch(r.label){case 0:return[4,fetch(e)];case 1:return[4,r.sent().text()];case 2:return t=r.sent(),n=s(t),[2,function(e){var t=new URL(e),r=t.searchParams.get("n"),o=null;return r&&(o=!0,t.searchParams.set("n",n(r))),{status:o,url:t.toString()}}]}}))}))}}},t={};function n(r){var o=t[r];if(void 0!==o)return o.exports;var s=t[r]={exports:{}};return e[r].call(s.exports,s,s.exports,n),s.exports}n.n=e=>{var t=e&&e.__esModule?()=>e.default:()=>e;return n.d(t,{a:t}),t},n.d=(e,t)=>{for(var r in t)n.o(t,r)&&!n.o(e,r)&&Object.defineProperty(e,r,{enumerable:!0,get:t[r]})},n.o=(e,t)=>Object.prototype.hasOwnProperty.call(e,t),(()=>{"use strict";var e=n(710);const t=n(227)("app:frameWorker"),r=()=>{},o=new WeakMap;var s=n(182),i=n.n(s),a=n(925),c=n.n(a);const u=n(227)("app:youtube"),l=n(735),h=n(227)("app:twitch"),p=n(735),f=function(e,t){let n="https://api.twitch.tv";return n+="live"===t?"/api/channels/"+e.channel:"/api/vods/"+e.id,n+="/access_token.json",h("request token",n),fetch(n,{headers:{"Client-ID":"jzkbprff40iqj646a697cyrvl0zt2m6"}}).then((e=>e.json())).then((function(e){return h("token",e),{sig:e.sig,token:e.token}}))},d=function(e,t,n){let r="http://usher.twitch.tv";r+="live"===t?"/api/channel/hls/"+e.channel+".m3u8":"/vod/"+e.id;const o={player:"twitchweb",p:Math.trunc(1e6*Math.random()),type:"any",allow_source:!0,allow_audio_only:!0,allow_spectre:!1};return Object.assign(o,n),r+="?"+p.stringify(o),r},y=n(227)("app:goodgame"),m={1080:"",720:"_720",480:"_480",240:"_240"},g=/"channel_id":"(\d+)"/,w=n(227)("app:index");window.app=new class{constructor(){this.history=null,this.transport=null,this.services=null,this.callFn=null,this.init()}init(){this.history=new class{constructor(){this.history=this.getHistory()}getHistory(){let e=null;try{e=JSON.parse(localStorage.getItem("history"))}catch(e){}return e||{}}get(e){return Promise.resolve().then((()=>{let t=null;const n=Math.trunc(Date.now()/1e3),r=this.history[e];return r&&r.expire>n&&(t=r.data),t}))}set(e,t){return Promise.resolve().then((()=>{const n=this.history,r=Math.trunc(Date.now()/1e3);Object.keys(n).forEach((function(e){n[e].expire<r&&delete n[e]})),n[e]={expire:r+86400,data:t},localStorage.setItem("history",JSON.stringify(n))}))}},this.services=new class{constructor(){this.youtube=new class{getInfo(e){let t=null;return[/\/\/(?:[^\/]+\.)?youtu\.be\/([\w\-]+)/,/\/\/(?:[^\/]+\.)?youtube\.com\/.+[?&]v=([\w\-]+)/,/\/\/(?:[^\/]+\.)?youtube\.com\/(?:.+\/)?(?:v|embed)\/([\w\-]+)/].some((n=>{const r=n.exec(e);if(r)return t={},t.type="youtube",t.id=r[1],!0})),t}async getLinks(e){const{playerResponse:t,speedFixFn:n}=await async function(e){const{key:t,version:n,playerUrl:r}=await c()(),o=await i()(r).catch((e=>(u("getSpeedFixFn error: %o",e),()=>{throw new Error("getSpeedFixFn fail")}))),s="https://www.youtube.com/youtubei/v1/player?"+l.stringify({key:t}),a=await fetch(s,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({videoId:e,context:{client:{hl:"en",clientName:"WEB",clientVersion:n}},playbackContext:{contentPlaybackContext:{referer:"https://www.youtube.com/embed/"+encodeURIComponent(e)}}})});return{playerResponse:await a.json(),speedFixFn:o}}(e.id),r=function(e,t){const n=[],{formats:r,adaptiveFormats:o,dashManifestUrl:s,hlsManifestUrl:i}=e.streamingData;if(r&&r.forEach((e=>{if(!e.url)return;const{status:t,url:r}=a(e.url);let o=e.qualityLabel;!1===t&&(o+=" slow"),n.push({type:"video",typeIndex:2,width:e.width,height:e.height,quality:e.qualityLabel,url:r,title:o})})),o&&o.forEach((e=>{if(!e.url)return;if(!/^audio\//.test(e.mimeType))return;const t=Math.round(e.bitrate/1e3),r="Audio "+t+"kbps",{status:o,url:s}=a(e.url);let i=r;!1===o&&(i+=" slow"),n.push({type:"audio",typeIndex:0,bitrate:t,quality:r,url:s,title:i})})),s){const e="DASH";n.push({type:"stream",typeIndex:1,quality:e,url:s,title:e})}if(i){const e="HLS";n.push({type:"stream",typeIndex:1,quality:e,url:i,title:e})}return n;function a(e){try{return t(e)}catch(t){return{status:!1,url:e}}}}(t,n);if(r.sort(((e,t)=>e.height>t.height?-1:1)),r.sort(((e,t)=>e.bitrate>t.bitrate?-1:1)),r.sort(((e,t)=>e.typeIndex>t.typeIndex?-1:1)),!r.length)throw new Error("Links is not found!");return r}},this.twitch=new class{getInfo(e){return Promise.resolve().then((()=>{const t=[/\/\/(?:[^\/]+\.)?twitch\.tv\/videos\/(\d+)/],n=()=>{const r=t.shift();if(!r)return null;const o=r.exec(e);if(o){const t=o[1];return fetch(e).then((e=>e.text())).then((e=>{let n=null;const r=/twitch:\/\/stream\/([^'"]+)/.exec(e);return r&&(n={},n.type="twitch",n.channel=r[1],n.videoType="v",n.id=t),n})).catch((t=>{h("fetch error",e,t)}))}return n()};return n()})).then((t=>t||(()=>{let t=null;return[/\/\/(?:[^\/]+\.)?twitch\.tv\/(\w+)(?:\/(v)\/(\d+))?/].some((function(n){const r=n.exec(e);if(r)return t={},t.type="twitch",t.channel=r[1],t.videoType=r[2],t.id=r[3],!0})),t})()))}getLinks(e){return(e=>{let t=null;if(e.id){if("v"!==e.videoType)throw new Error("Video type "+e.videoType+" not supported!");t=f(e,"video").then((function(t){return h("auth: "+JSON.stringify(t)),d(e,"video",{nauthsig:t.sig,nauth:t.token})}))}else t=f(e,"live").then((function(t){return h("auth: "+JSON.stringify(t)),d(e,"live",{sig:t.sig,token:t.token})}));return t})(e).then((function(e){return{url:e,quality:"",mime:"video/m3u8"}}))}},this.goodgame=new class{getInfo(e){let t=null;return[/(\/\/(?:[^\/]+\.)?goodgame\.ru\/channel\/(\w+))/].some((function(n){const r=n.exec(e);if(r)return t={},t.type="goodgame",t.id=r[2],t.url="https:"+r[1],!0})),t}getLinks(e){return(e=>{return(t=e.url,y("getStreamId",t),fetch(t,{headers:{Referer:t}}).then((e=>e.text())).then((function(e){const t=g.exec(e),n=t&&t[1];if(!n)throw new Error("Stream id is not found!");return n}))).then((function(e){return y("stream_id",e),t=Object.keys(m).map((function(t){const n=m[t];return{url:"https://hlss.goodgame.ru/hls/{0}{1}.m3u8".replace("{0}",e).replace("{1}",n),quality:parseInt(t,10),mime:"video/m3u8",title:t}})).sort((function(e,t){return e.quality>t.quality?-1:1})),Promise.all(t.map((e=>fetch(e.url,{method:"HEAD"}).then((t=>e),(e=>(y("Request link error: %O",e),null)))))).then((e=>{const t=e.filter((e=>!!e));if(!t.length)throw new Error("Stream checking error!");return t}));var t}));var t})(e).then((function(e){return e}))}}}},this.transport=new class{constructor(e,t){this.transportId=Math.trunc(1e3*Math.random()),this.callbackIndex=0,this.transport=e,this.actions=t,this.cbMap=new Map,this.onMessage=this.onMessage.bind(this),this.transport.onMessage(this.onMessage)}listener(e,t){if("callFn"===e.action)return this.responseFn(e,t),!0}onMessage(e){const n=this.cbMap;if(e.responseId){const r=n.get(e.responseId);r?r(e.message):t("Callback is not found",e)}else{let n;e.callbackId?(o=t=>{this.transport.postMessage({responseId:e.callbackId,message:t})},n=(...e)=>{o&&o(...e),o=null}):n=r;let s=null;try{s=this.listener(e.message,n)}catch(e){t("Call listener error",e)}!0!==s&&n()}var o}sendMessage(e,t){const n=this.cbMap,r={message:e};if(t){r.callbackId=this.transportId+"_"+ ++this.callbackIndex;const e=e=>{n.delete(r.callbackId),t(e)};n.set(r.callbackId,e),o.has(t)&&(o.delete(t),o.set(e,!0))}try{this.transport.postMessage(r)}catch(e){throw n.delete(r.callbackId),e}}waitPromise(t){return new Promise(((n,r)=>{const s=t=>t?t.err?r((0,e.deserializeError)(t.err)):n(t.result):r(new Error("Response is empty"));o.set(s,!0),this.sendMessage(t,s)}))}callFn(e,t=[]){return this.waitPromise({action:"callFn",fn:e,args:t})}responsePromise(n,r){return n.then((e=>{r({result:e})}),(t=>{r({err:(0,e.serializeError)(t)})})).catch((function(e){t("responsePromise error",e)})),!0}resolvePath(e){const t=e.split("."),n=t.pop();let r=this.actions;for(;t.length;)r=r[t.shift()];return{scope:r,endPoint:n}}responseFn(e,t){const n=Promise.resolve().then((()=>{const{scope:t,endPoint:n}=this.resolvePath(e.fn);return t[n].apply(t,e.args)}));return this.responsePromise(n,t)}destroy(){this.cbMap.forEach((t=>{o.has(t)?t({err:(0,e.serializeError)(new Error("Destroyed"))}):t()}))}}({postMessage:function(e){parent.postMessage(JSON.stringify(e),"*")},onMessage:function(e){window.onmessage=function(t){e(JSON.parse(t.data))}}},this.api),this.callFn=this.transport.callFn.bind(this.transport),this.callFn("ready")}async onGetLink(e,t){let n;if(Array.isArray(t)){const e=t.map((e=>e.title));n=await this.callFn("choose",[{title:"Choose link",list:e}]).then((e=>"number"==typeof e?t[e]:null))}else n=t;n?(this.callFn("setStatus",[`${e.type}: ${n.quality?"Found "+n.quality:"Found!"}`]),this.callFn("openUrl",[{url:n.url,mime:n.mime}])):this.callFn("setStatus",["Empty choose"])}getInfo(e){return Promise.resolve().then((()=>{const t=Object.keys(this.services),n=()=>{const r=t.shift();if(!r)throw new Error("Service is not found");return Promise.resolve().then((()=>this.services[r].getInfo(e))).then((e=>e||n()),(e=>(w(`getInfo error ${r}`,e),n())))};return n()}))}get api(){return{getVideoLink:e=>this.getInfo(e).then((e=>(this.callFn("setStatus",["Service: "+e.type]),this.history.get(JSON.stringify(e)).then((e=>{if(e)return this.callFn("confirm",[{message:"Open link from history?"}]).then((t=>t?e:null))})).then((t=>t||(this.callFn("setStatus",[`${e.type}: Request links`]),this.services[e.type].getLinks(e).then((t=>(this.history.set(JSON.stringify(e),t),t)))))).then((t=>this.onGetLink(e,t)))))).catch((e=>{this.callFn("setStatus",[`Error: ${e.message}`])}))}}}})()})();
+/******/ (() => { // webpackBootstrap
+/******/ 	"use strict";
+/******/ 	var __webpack_modules__ = ({
+
+/***/ 335:
+/***/ ((module) => {
+
+// Copyright Joyent, Inc. and other Node contributors.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to permit
+// persons to whom the Software is furnished to do so, subject to the
+// following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+
+
+// If obj.hasOwnProperty has been overridden, then calling
+// obj.hasOwnProperty(prop) will break.
+// See: https://github.com/joyent/node/issues/1707
+function hasOwnProperty(obj, prop) {
+  return Object.prototype.hasOwnProperty.call(obj, prop);
+}
+
+module.exports = function(qs, sep, eq, options) {
+  sep = sep || '&';
+  eq = eq || '=';
+  var obj = {};
+
+  if (typeof qs !== 'string' || qs.length === 0) {
+    return obj;
+  }
+
+  var regexp = /\+/g;
+  qs = qs.split(sep);
+
+  var maxKeys = 1000;
+  if (options && typeof options.maxKeys === 'number') {
+    maxKeys = options.maxKeys;
+  }
+
+  var len = qs.length;
+  // maxKeys <= 0 means that we should not limit keys count
+  if (maxKeys > 0 && len > maxKeys) {
+    len = maxKeys;
+  }
+
+  for (var i = 0; i < len; ++i) {
+    var x = qs[i].replace(regexp, '%20'),
+        idx = x.indexOf(eq),
+        kstr, vstr, k, v;
+
+    if (idx >= 0) {
+      kstr = x.substr(0, idx);
+      vstr = x.substr(idx + 1);
+    } else {
+      kstr = x;
+      vstr = '';
+    }
+
+    k = decodeURIComponent(kstr);
+    v = decodeURIComponent(vstr);
+
+    if (!hasOwnProperty(obj, k)) {
+      obj[k] = v;
+    } else if (isArray(obj[k])) {
+      obj[k].push(v);
+    } else {
+      obj[k] = [obj[k], v];
+    }
+  }
+
+  return obj;
+};
+
+var isArray = Array.isArray || function (xs) {
+  return Object.prototype.toString.call(xs) === '[object Array]';
+};
+
+
+/***/ }),
+
+/***/ 795:
+/***/ ((module) => {
+
+// Copyright Joyent, Inc. and other Node contributors.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to permit
+// persons to whom the Software is furnished to do so, subject to the
+// following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+
+
+var stringifyPrimitive = function(v) {
+  switch (typeof v) {
+    case 'string':
+      return v;
+
+    case 'boolean':
+      return v ? 'true' : 'false';
+
+    case 'number':
+      return isFinite(v) ? v : '';
+
+    default:
+      return '';
+  }
+};
+
+module.exports = function(obj, sep, eq, name) {
+  sep = sep || '&';
+  eq = eq || '=';
+  if (obj === null) {
+    obj = undefined;
+  }
+
+  if (typeof obj === 'object') {
+    return map(objectKeys(obj), function(k) {
+      var ks = encodeURIComponent(stringifyPrimitive(k)) + eq;
+      if (isArray(obj[k])) {
+        return map(obj[k], function(v) {
+          return ks + encodeURIComponent(stringifyPrimitive(v));
+        }).join(sep);
+      } else {
+        return ks + encodeURIComponent(stringifyPrimitive(obj[k]));
+      }
+    }).join(sep);
+
+  }
+
+  if (!name) return '';
+  return encodeURIComponent(stringifyPrimitive(name)) + eq +
+         encodeURIComponent(stringifyPrimitive(obj));
+};
+
+var isArray = Array.isArray || function (xs) {
+  return Object.prototype.toString.call(xs) === '[object Array]';
+};
+
+function map (xs, f) {
+  if (xs.map) return xs.map(f);
+  var res = [];
+  for (var i = 0; i < xs.length; i++) {
+    res.push(f(xs[i], i));
+  }
+  return res;
+}
+
+var objectKeys = Object.keys || function (obj) {
+  var res = [];
+  for (var key in obj) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) res.push(key);
+  }
+  return res;
+};
+
+
+/***/ }),
+
+/***/ 735:
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+
+exports.decode = exports.parse = __webpack_require__(335);
+exports.encode = exports.stringify = __webpack_require__(795);
+
+
+/***/ }),
+
+/***/ 710:
+/***/ ((module) => {
+
+
+
+class NonError extends Error {
+	constructor(message) {
+		super(NonError._prepareSuperMessage(message));
+		Object.defineProperty(this, 'name', {
+			value: 'NonError',
+			configurable: true,
+			writable: true
+		});
+
+		if (Error.captureStackTrace) {
+			Error.captureStackTrace(this, NonError);
+		}
+	}
+
+	static _prepareSuperMessage(message) {
+		try {
+			return JSON.stringify(message);
+		} catch {
+			return String(message);
+		}
+	}
+}
+
+const commonProperties = [
+	{property: 'name', enumerable: false},
+	{property: 'message', enumerable: false},
+	{property: 'stack', enumerable: false},
+	{property: 'code', enumerable: true}
+];
+
+const isCalled = Symbol('.toJSON called');
+
+const toJSON = from => {
+	from[isCalled] = true;
+	const json = from.toJSON();
+	delete from[isCalled];
+	return json;
+};
+
+const destroyCircular = ({
+	from,
+	seen,
+	to_,
+	forceEnumerable,
+	maxDepth,
+	depth
+}) => {
+	const to = to_ || (Array.isArray(from) ? [] : {});
+
+	seen.push(from);
+
+	if (depth >= maxDepth) {
+		return to;
+	}
+
+	if (typeof from.toJSON === 'function' && from[isCalled] !== true) {
+		return toJSON(from);
+	}
+
+	for (const [key, value] of Object.entries(from)) {
+		if (typeof Buffer === 'function' && Buffer.isBuffer(value)) {
+			to[key] = '[object Buffer]';
+			continue;
+		}
+
+		if (typeof value === 'function') {
+			continue;
+		}
+
+		if (!value || typeof value !== 'object') {
+			to[key] = value;
+			continue;
+		}
+
+		if (!seen.includes(from[key])) {
+			depth++;
+
+			to[key] = destroyCircular({
+				from: from[key],
+				seen: seen.slice(),
+				forceEnumerable,
+				maxDepth,
+				depth
+			});
+			continue;
+		}
+
+		to[key] = '[Circular]';
+	}
+
+	for (const {property, enumerable} of commonProperties) {
+		if (typeof from[property] === 'string') {
+			Object.defineProperty(to, property, {
+				value: from[property],
+				enumerable: forceEnumerable ? true : enumerable,
+				configurable: true,
+				writable: true
+			});
+		}
+	}
+
+	return to;
+};
+
+const serializeError = (value, options = {}) => {
+	const {maxDepth = Number.POSITIVE_INFINITY} = options;
+
+	if (typeof value === 'object' && value !== null) {
+		return destroyCircular({
+			from: value,
+			seen: [],
+			forceEnumerable: true,
+			maxDepth,
+			depth: 0
+		});
+	}
+
+	// People sometimes throw things besides Error objects…
+	if (typeof value === 'function') {
+		// `JSON.stringify()` discards functions. We do too, unless a function is thrown directly.
+		return `[Function: ${(value.name || 'anonymous')}]`;
+	}
+
+	return value;
+};
+
+const deserializeError = (value, options = {}) => {
+	const {maxDepth = Number.POSITIVE_INFINITY} = options;
+
+	if (value instanceof Error) {
+		return value;
+	}
+
+	if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+		const newError = new Error(); // eslint-disable-line unicorn/error-message
+		destroyCircular({
+			from: value,
+			seen: [],
+			to_: newError,
+			maxDepth,
+			depth: 0
+		});
+		return newError;
+	}
+
+	return new NonError(value);
+};
+
+module.exports = {
+	serializeError,
+	deserializeError
+};
+
+
+/***/ }),
+
+/***/ 925:
+/***/ (function(__unused_webpack_module, exports) {
+
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __generator = (this && this.__generator) || function (thisArg, body) {
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
+    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+    function verb(n) { return function (v) { return step([n, v]); }; }
+    function step(op) {
+        if (f) throw new TypeError("Generator is already executing.");
+        while (_) try {
+            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [op[0] & 2, t.value];
+            switch (op[0]) {
+                case 0: case 1: t = op; break;
+                case 4: _.label++; return { value: op[1], done: false };
+                case 5: _.label++; y = op[1]; op = [0]; continue;
+                case 7: op = _.ops.pop(); _.trys.pop(); continue;
+                default:
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
+                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
+                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
+                    if (t[2]) _.ops.pop();
+                    _.trys.pop(); continue;
+            }
+            op = body.call(thisArg, _);
+        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
+        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+    }
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+function getClientInfo() {
+    return __awaiter(this, void 0, void 0, function () {
+        var response, html, m, key, version, playerUrl;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0: return [4 /*yield*/, fetch('https://www.youtube.com/')];
+                case 1:
+                    response = _a.sent();
+                    if (!response.ok) {
+                        throw new Error('Incorrect status code ' + response.status);
+                    }
+                    return [4 /*yield*/, response.text()];
+                case 2:
+                    html = _a.sent();
+                    m = /"INNERTUBE_API_KEY":("[^"]+")/.exec(html);
+                    key = m && JSON.parse(m[1]);
+                    m = /"INNERTUBE_CLIENT_VERSION":("[^"]+")/.exec(html);
+                    version = m && JSON.parse(m[1]);
+                    if (!key || !version) {
+                        throw new Error('Client info not found');
+                    }
+                    m = /"jsUrl":("[^"]+")/.exec(html);
+                    if (m) {
+                        playerUrl = JSON.parse(m[1]);
+                        playerUrl = new URL(playerUrl, response.url);
+                    }
+                    if (!playerUrl) {
+                        throw new Error('playerUrl is empty');
+                    }
+                    return [2 /*return*/, { key: key, version: version, playerUrl: playerUrl }];
+            }
+        });
+    });
+}
+exports["default"] = getClientInfo;
+
+
+/***/ }),
+
+/***/ 182:
+/***/ (function(__unused_webpack_module, exports) {
+
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __generator = (this && this.__generator) || function (thisArg, body) {
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
+    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+    function verb(n) { return function (v) { return step([n, v]); }; }
+    function step(op) {
+        if (f) throw new TypeError("Generator is already executing.");
+        while (_) try {
+            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [op[0] & 2, t.value];
+            switch (op[0]) {
+                case 0: case 1: t = op; break;
+                case 4: _.label++; return { value: op[1], done: false };
+                case 5: _.label++; y = op[1]; op = [0]; continue;
+                case 7: op = _.ops.pop(); _.trys.pop(); continue;
+                default:
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
+                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
+                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
+                    if (t[2]) _.ops.pop();
+                    _.trys.pop(); continue;
+            }
+            op = body.call(thisArg, _);
+        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
+        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+    }
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getSigFn = void 0;
+var debug = console.error.bind(console, 'app:getSpeedFixFn');
+function getSpeedFixFn(playerUrl) {
+    return __awaiter(this, void 0, void 0, function () {
+        var response, code, sigFn;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0: return [4 /*yield*/, fetch(playerUrl)];
+                case 1:
+                    response = _a.sent();
+                    return [4 /*yield*/, response.text()];
+                case 2:
+                    code = _a.sent();
+                    sigFn = getSigFn(code);
+                    return [2 /*return*/, function (url) {
+                            var uri = new URL(url);
+                            var n = uri.searchParams.get('n');
+                            var status = null;
+                            if (n) {
+                                status = true;
+                                uri.searchParams.set('n', sigFn(n));
+                            }
+                            return { status: status, url: uri.toString() };
+                        }];
+            }
+        });
+    });
+}
+var codeData = function () {
+    var __result__ = {};
+    var navigator = {};
+    var location = { hostname: 'a' };
+    var document = { location: location, domain: 'a' };
+    try {
+        /* @ts-ignore */
+        Object.assign(this, { document: document, location: location, navigator: navigator });
+    }
+    catch (err) { }
+    var XMLHttpRequest = /** @class */ (function () {
+        function class_1() {
+        }
+        class_1.prototype.fetch = function () {
+            var args = [];
+            for (var _i = 0; _i < arguments.length; _i++) {
+                args[_i] = arguments[_i];
+            }
+        };
+        ;
+        return class_1;
+    }());
+};
+var afterCodeData = function () {
+    try {
+        var a = new Map();
+        Object.assign(a, {
+            u: 'local',
+            D: 'true',
+        });
+        a.set('n', 'true');
+        /* @ts-ignore */
+        _yt_player.YB.prototype.get.call(a);
+    }
+    catch (err) {
+        console.error('run error', err);
+    }
+    /* @ts-ignore */
+    if (Array.isArray(__result__.sigFn)) {
+        /* @ts-ignore */
+        __result__.sigFn = __result__.sigFn[0];
+    }
+};
+var getFnBody = function (fn) {
+    var str = fn.toString();
+    var start = str.indexOf('{') + 1;
+    var end = str.lastIndexOf('}');
+    return str.slice(start, end);
+};
+function getSigFn(code) {
+    var m = /\.get\("n"\)\)&&\(b=([a-zA-Z0-9$]+)(?:\[\d+\])?\([a-zA-Z0-9]\)/.exec(code);
+    if (!m) {
+        throw new Error('Sig fn name not found');
+    }
+    var fragment = m[0], variable = m[1];
+    var newFragment = fragment.replace(variable, "(__result__.sigFn=".concat(variable, ")"));
+    code = code
+        .replace(fragment, newFragment);
+    // console.log({newFragment});
+    var pre = getFnBody(codeData);
+    // console.log(pre);
+    var fn = new Function('', "".concat(pre.replace(/\n/g, ' '), "\n").concat(code, ";\n").concat(getFnBody(afterCodeData), "\nreturn __result__.sigFn;"))();
+    if (typeof fn !== "function") {
+        throw new Error('Sig fn is not found');
+    }
+    return fn;
+}
+exports.getSigFn = getSigFn;
+exports["default"] = getSpeedFixFn;
+
+
+/***/ })
+
+/******/ 	});
+/************************************************************************/
+/******/ 	// The module cache
+/******/ 	var __webpack_module_cache__ = {};
+/******/ 	
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
+/******/ 		// Check if module is in cache
+/******/ 		var cachedModule = __webpack_module_cache__[moduleId];
+/******/ 		if (cachedModule !== undefined) {
+/******/ 			return cachedModule.exports;
+/******/ 		}
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		var module = __webpack_module_cache__[moduleId] = {
+/******/ 			// no module.id needed
+/******/ 			// no module.loaded needed
+/******/ 			exports: {}
+/******/ 		};
+/******/ 	
+/******/ 		// Execute the module function
+/******/ 		__webpack_modules__[moduleId].call(module.exports, module, module.exports, __webpack_require__);
+/******/ 	
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
+/******/ 	}
+/******/ 	
+/************************************************************************/
+/******/ 	/* webpack/runtime/compat get default export */
+/******/ 	(() => {
+/******/ 		// getDefaultExport function for compatibility with non-harmony modules
+/******/ 		__webpack_require__.n = (module) => {
+/******/ 			var getter = module && module.__esModule ?
+/******/ 				() => (module['default']) :
+/******/ 				() => (module);
+/******/ 			__webpack_require__.d(getter, { a: getter });
+/******/ 			return getter;
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/define property getters */
+/******/ 	(() => {
+/******/ 		// define getter functions for harmony exports
+/******/ 		__webpack_require__.d = (exports, definition) => {
+/******/ 			for(var key in definition) {
+/******/ 				if(__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
+/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
+/******/ 				}
+/******/ 			}
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
+/******/ 	(() => {
+/******/ 		__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
+/******/ 	})();
+/******/ 	
+/************************************************************************/
+var __webpack_exports__ = {};
+// This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
+(() => {
+
+// UNUSED EXPORTS: default
+
+// EXTERNAL MODULE: ./node_modules/serialize-error/index.js
+var serialize_error = __webpack_require__(710);
+;// CONCATENATED MODULE: ./src/transport.js
+const debug = console.error.bind(console, 'app:frameWorker');
+
+
+const emptyFn = () => {};
+const once = (cb) => (...args) => {
+  cb && cb(...args);
+  cb = null;
+};
+
+const promiseCallbackMap = new WeakMap();
+
+class Transport {
+  /**
+   * @param {{onMessage:function(function),postMessage:function(*)}} transport
+   * @param {Object} actions
+   **/
+  constructor(transport, actions) {
+    this.transportId = Math.trunc(Math.random() * 1000);
+    this.callbackIndex = 0;
+    this.transport = transport;
+    this.actions = actions;
+
+    this.cbMap = new Map();
+
+    this.onMessage = this.onMessage.bind(this);
+
+    this.transport.onMessage(this.onMessage);
+  }
+
+  /**
+   * @param {*} msg
+   * @param {{event:Object}} options
+   * @param {function(*)} response
+   * @return {boolean}
+   * @private
+   */
+  listener(msg, response) {
+    switch (msg.action) {
+      case 'callFn': {
+        this.responseFn(msg, response);
+        return true;
+      }
+    }
+  }
+
+  /**
+   * @param {{responseId: string, message:*, callbackId: string}} msg
+   */
+  onMessage(msg) {
+    const cbMap = this.cbMap;
+    if (msg.responseId) {
+      const callback = cbMap.get(msg.responseId);
+      if (callback) {
+        callback(msg.message);
+      } else {
+        debug('Callback is not found', msg);
+      }
+    } else {
+      let response;
+      if (msg.callbackId) {
+        response = once(message => {
+          this.transport.postMessage({
+            responseId: msg.callbackId,
+            message: message
+          });
+        });
+      } else {
+        response = emptyFn;
+      }
+
+      let result = null;
+      try {
+        result = this.listener(msg.message, response)
+      } catch (err) {
+        debug('Call listener error', err);
+      }
+      if (result !== true) {
+        response();
+      }
+    }
+  }
+
+  /**
+   * @param {*} message
+   * @param {function} [callback]
+   */
+  sendMessage(message, callback) {
+    const cbMap = this.cbMap;
+    const msg = {
+      message: message
+    };
+
+    if (callback) {
+      msg.callbackId = this.transportId + '_' + (++this.callbackIndex);
+      const wrappedCallback = message => {
+        cbMap.delete(msg.callbackId);
+        callback(message);
+      };
+      cbMap.set(msg.callbackId, wrappedCallback);
+      if (promiseCallbackMap.has(callback)) {
+        promiseCallbackMap.delete(callback);
+        promiseCallbackMap.set(wrappedCallback, true);
+      }
+    }
+
+    try {
+      this.transport.postMessage(msg);
+    } catch (err) {
+      cbMap.delete(msg.callbackId);
+      throw err;
+    }
+  }
+
+  /**
+   * @param {*} msg
+   * @return {Promise}
+   * @private
+   */
+  waitPromise(msg) {
+    return new Promise((resolve, reject) => {
+      const cb = response => {
+        if (!response) {
+          return reject(new Error('Response is empty'));
+        } else
+        if (response.err) {
+          return reject((0,serialize_error.deserializeError)(response.err));
+        } else {
+          return resolve(response.result);
+        }
+      };
+      promiseCallbackMap.set(cb, true);
+      this.sendMessage(msg, cb);
+    });
+  }
+
+  /**
+   * @param {string} fnName
+   * @param {*[]} argsArray
+   * @return {Promise}
+   */
+  callFn(fnName, argsArray = []) {
+    const self = this;
+    return self.waitPromise({
+      action: 'callFn',
+      fn: fnName,
+      args: argsArray
+    });
+  }
+
+  /**
+   * @param {Promise} promise
+   * @param {Function} response
+   * @return {boolean}
+   * @private
+   */
+  responsePromise(promise, response) {
+    promise.then(result => {
+      response({result: result});
+    }, err => {
+      response({err: (0,serialize_error.serializeError)(err)});
+    }).catch(function (err) {
+      debug('responsePromise error', err);
+    });
+    return true;
+  }
+
+  /**
+   * @param {string} path
+   * @return {{scope: Object, endPoint: *}}
+   * @private
+   */
+  resolvePath(path) {
+    const parts = path.split('.');
+    const endPoint = parts.pop();
+    let scope = this.actions;
+    while (parts.length) {
+      scope = scope[parts.shift()];
+    }
+    return {scope, endPoint};
+  }
+
+  /**
+   * @param {{fn:string,args:*[]}} msg
+   * @param {Function} response
+   * @return {boolean}
+   * @private
+   */
+  responseFn(msg, response) {
+    const promise = Promise.resolve().then(() => {
+      const {scope, endPoint: fn} = this.resolvePath(msg.fn);
+      return scope[fn].apply(scope, msg.args);
+    });
+    return this.responsePromise(promise, response);
+  }
+
+  destroy() {
+    this.cbMap.forEach(cb => {
+      if (promiseCallbackMap.has(cb)) {
+        cb({err: (0,serialize_error.serializeError)(new Error('Destroyed'))});
+      } else {
+        cb();
+      }
+    });
+  }
+}
+
+/* harmony default export */ const transport = (Transport);
+
+// EXTERNAL MODULE: ./src/service/youtube/getSpeedFixFn.ts
+var getSpeedFixFn = __webpack_require__(182);
+var getSpeedFixFn_default = /*#__PURE__*/__webpack_require__.n(getSpeedFixFn);
+// EXTERNAL MODULE: ./src/service/youtube/getClientInfo.ts
+var getClientInfo = __webpack_require__(925);
+var getClientInfo_default = /*#__PURE__*/__webpack_require__.n(getClientInfo);
+;// CONCATENATED MODULE: ./src/service/youtube.js
+
+
+
+const youtube_debug = console.error.bind(console, 'app:youtube');
+const qs = __webpack_require__(735);
+
+class Youtube {
+  getInfo(url) {
+    let result = null;
+    [
+      /\/\/(?:[^\/]+\.)?youtu\.be\/([\w\-]+)/,
+      /\/\/(?:[^\/]+\.)?youtube\.com\/.+[?&]v=([\w\-]+)/,
+      /\/\/(?:[^\/]+\.)?youtube\.com\/(?:.+\/)?(?:v|embed)\/([\w\-]+)/
+    ].some((re) => {
+      const m = re.exec(url);
+      if (m) {
+        result = {};
+        result.type = 'youtube';
+        result.id = m[1];
+        return true;
+      }
+    });
+    return result;
+  }
+
+  async getLinks(info) {
+    const {playerResponse, speedFixFn} = await getYtMeta(info.id);
+    const links = getYtLinks(playerResponse, speedFixFn);
+    links.sort((a, b) => {
+      return a.height > b.height ? -1 : 1;
+    });
+    links.sort((a, b) => {
+      return a.bitrate > b.bitrate ? -1 : 1;
+    });
+    links.sort((a, b) => {
+      return a.typeIndex > b.typeIndex ? -1 : 1;
+    });
+    if (!links.length) {
+      throw new Error("Links is not found!");
+    }
+
+    return links;
+  }
+}
+
+async function getYtMeta(id) {
+  const {key, version, playerUrl} = await getClientInfo_default()();
+
+  const speedFixFn = await getSpeedFixFn_default()(playerUrl).catch((err) => {
+    youtube_debug('getSpeedFixFn error: %o', err);
+    return () => {
+      throw new Error('getSpeedFixFn fail');
+    };
+  });
+
+  const url = 'https://www.youtube.com/youtubei/v1/player?' + qs.stringify({key});
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      videoId: id,
+      context: {
+        client: {
+          hl: 'en',
+          clientName: 'WEB',
+          clientVersion: version,
+        },
+      },
+      playbackContext: {
+        contentPlaybackContext: {
+          referer: 'https://www.youtube.com/embed/' + encodeURIComponent(id),
+        }
+      },
+    })
+  });
+
+  const playerResponse = await response.json();
+
+  return {playerResponse, speedFixFn};
+}
+
+function getYtLinks(playerResponse, speedFixFn) {
+  const links = [];
+  const {formats, adaptiveFormats, dashManifestUrl, hlsManifestUrl} = playerResponse.streamingData;
+  formats && formats.forEach((format) => {
+    if (!format.url) return;
+    const {status, url} = fixUrl(format.url);
+    let title = format.qualityLabel;
+    if (status === false) {
+      title += ' slow';
+    }
+    links.push({
+      type: 'video',
+      typeIndex: 2,
+      width: format.width,
+      height: format.height,
+      quality: format.qualityLabel,
+      url,
+      title,
+    });
+  });
+  adaptiveFormats && adaptiveFormats.forEach((format) => {
+    if (!format.url) return;
+    if (!/^audio\//.test(format.mimeType)) return;
+    const bitrate = Math.round(format.bitrate / 1000);
+    const bitrateLabel = 'Audio ' + bitrate + 'kbps';
+    const {status, url} = fixUrl(format.url);
+    let title = bitrateLabel;
+    if (status === false) {
+      title += ' slow';
+    }
+    links.push({
+      type: 'audio',
+      typeIndex: 0,
+      bitrate,
+      quality: bitrateLabel,
+      url,
+      title,
+    });
+  });
+  if (dashManifestUrl) {
+    const qualityLabel = 'DASH';
+    links.push({
+      type: 'stream',
+      typeIndex: 1,
+      quality: qualityLabel,
+      url: dashManifestUrl,
+      title: qualityLabel,
+    });
+  }
+  if (hlsManifestUrl) {
+    const qualityLabel = 'HLS';
+    links.push({
+      type: 'stream',
+      typeIndex: 1,
+      quality: qualityLabel,
+      url: hlsManifestUrl,
+      title: qualityLabel,
+    });
+  }
+  return links;
+
+  function fixUrl(url) {
+    try {
+      return speedFixFn(url);
+    } catch (err) {
+      return {status: false, url};
+    }
+  }
+}
+
+/* harmony default export */ const youtube = (Youtube);
+
+;// CONCATENATED MODULE: ./src/service/twitch.js
+const twitch_debug = console.error.bind(console, 'app:twitch');
+const twitch_qs = __webpack_require__(735);
+
+const getToken = function (info, type) {
+  let url = 'https://api.twitch.tv';
+  if (type === 'live') {
+    url += '/api/channels/' + info.channel;
+  } else {
+    url += '/api/vods/' + info.id;
+  }
+  url += '/access_token.json';
+
+  twitch_debug('request token', url);
+  return fetch(url, {
+    headers: {
+      'Client-ID': 'jzkbprff40iqj646a697cyrvl0zt2m6'
+    },
+  }).then(r => r.json()).then(function (json) {
+    twitch_debug('token', json);
+    return {
+      sig: json.sig,
+      token: json.token
+    }
+  });
+};
+const getHlsStreams = function (info, type, _params) {
+  let url = 'http://usher.twitch.tv';
+  if (type === 'live') {
+    url += '/api/channel/hls/' + info.channel + '.m3u8';
+  } else {
+    url += '/vod/' + info.id;
+  }
+
+  const params = {
+    player: 'twitchweb',
+    p: Math.trunc(Math.random() * 1000000),
+    type: 'any',
+    allow_source: true,
+    allow_audio_only: true,
+    allow_spectre: false
+  };
+  Object.assign(params, _params);
+
+  url += '?' + twitch_qs.stringify(params);
+
+  return url;
+};
+
+const getTwitchVideoUrl = info => {
+  let promise = null;
+  if (info.id) {
+    if (info.videoType === 'v') {
+      promise = getToken(info, 'video').then(function (auth) {
+        twitch_debug('auth: ' + JSON.stringify(auth));
+
+        return getHlsStreams(info, 'video', {
+          nauthsig: auth.sig,
+          nauth: auth.token
+        });
+      });
+    } else {
+      // todo: implement me!
+      throw new Error("Video type " + info.videoType + " not supported!");
+    }
+  } else {
+    promise = getToken(info, 'live').then(function (auth) {
+      twitch_debug('auth: ' + JSON.stringify(auth));
+
+      return getHlsStreams(info, 'live', {
+        sig: auth.sig,
+        token: auth.token
+      });
+    });
+  }
+  return promise;
+};
+
+class Twitch {
+  getInfo(url) {
+    const asVideo = () => {
+      return Promise.resolve().then(() => {
+        const reList = [
+          /\/\/(?:[^\/]+\.)?twitch\.tv\/videos\/(\d+)/
+        ];
+        const next = () => {
+          const re = reList.shift();
+          if (!re) {
+            return null;
+          }
+          const m = re.exec(url);
+          if (m) {
+            const id = m[1];
+            return fetch(url).then(r => r.text()).then(text => {
+              let result = null;
+              const mChannel = /twitch:\/\/stream\/([^'"]+)/.exec(text);
+              if (mChannel) {
+                result = {};
+                result.type = 'twitch';
+                result.channel = mChannel[1];
+                result.videoType = 'v';
+                result.id = id;
+              }
+              return result;
+            }).catch(err => {
+              twitch_debug('fetch error', url, err);
+            });
+          } else {
+            return next();
+          }
+        };
+        return next();
+      });
+    };
+    const asStream = () => {
+      let result = null;
+      [
+        /\/\/(?:[^\/]+\.)?twitch\.tv\/(\w+)(?:\/(v)\/(\d+))?/
+      ].some(function (re) {
+        const m = re.exec(url);
+        if (m) {
+          result = {};
+          result.type = 'twitch';
+          result.channel = m[1];
+          result.videoType = m[2];
+          result.id = m[3];
+          return true;
+        }
+      });
+      return result;
+    };
+    return asVideo().then(result => {
+      if (!result) {
+        return asStream();
+      }
+      return result;
+    });
+  }
+  getLinks(info) {
+    return getTwitchVideoUrl(info).then(function (url) {
+      return {
+        url: url,
+        quality: '',
+        mime: 'video/m3u8'
+      };
+    });
+  }
+}
+
+/* harmony default export */ const twitch = (Twitch);
+
+;// CONCATENATED MODULE: ./src/service/goodgame.js
+const goodgame_debug = console.error.bind(console, 'app:goodgame');
+
+const HLS_URL_FORMAT = "https://hlss.goodgame.ru/hls/{0}{1}.m3u8";
+const QUALITIES_SUFFIX = {
+  "1080": "",
+  "720": "_720",
+  "480": "_480",
+  "240": "_240"
+};
+const streamIdRe = /"channel_id":"(\d+)"/;
+
+const getStreamId = function (url) {
+  goodgame_debug('getStreamId', url);
+  return fetch(url, {
+    headers: {
+      Referer: url
+    }
+  }).then(r => r.text()).then(function (text) {
+    const m = streamIdRe.exec(text);
+    const streamId = m && m[1];
+    if (!streamId) {
+      throw new Error("Stream id is not found!");
+    }
+
+    return streamId;
+  });
+};
+
+const getValidLink = function (links) {
+  return Promise.all(links.map((item) => {
+    return fetch(item.url, {
+      method: 'HEAD'
+    }).then((response) => {
+      return item;
+    }, (err) => {
+      goodgame_debug('Request link error: %O', err);
+      return null;
+    });
+  })).then((results) => {
+    const r = results.filter(item => !!item);
+    if (!r.length) {
+      throw new Error("Stream checking error!");
+    }
+    return r;
+  });
+};
+
+
+const getGoodGameVideoUrl = info => {
+  return getStreamId(info.url).then(function (stream_id) {
+    goodgame_debug('stream_id', stream_id);
+
+    const links = Object.keys(QUALITIES_SUFFIX).map(function (quality) {
+      const suffix = QUALITIES_SUFFIX[quality];
+      return {
+        url: HLS_URL_FORMAT.replace('{0}', stream_id).replace('{1}', suffix),
+        quality: parseInt(quality, 10),
+        mime: 'video/m3u8',
+        title: quality,
+      };
+    }).sort(function (a, b) {
+      return a.quality > b.quality ? -1 : 1;
+    });
+    return getValidLink(links);
+  });
+};
+
+class Goodgame {
+  getInfo(url) {
+    let result = null;
+    [
+      /(\/\/(?:[^\/]+\.)?goodgame\.ru\/channel\/(\w+))/
+    ].some(function (re) {
+      const m = re.exec(url);
+      if (m) {
+        result = {};
+        result.type = 'goodgame';
+        result.id = m[2];
+        result.url = 'https:' + m[1];
+        return true;
+      }
+    });
+    return result;
+  }
+  getLinks(info) {
+    return getGoodGameVideoUrl(info).then(function (linkItem) {
+      return linkItem;
+    });
+  }
+}
+
+/* harmony default export */ const goodgame = (Goodgame);
+
+;// CONCATENATED MODULE: ./src/services.js
+
+
+
+
+class Services {
+  constructor() {
+    this.youtube = new youtube();
+    this.twitch = new twitch();
+    this.goodgame = new goodgame();
+  }
+}
+
+/* harmony default export */ const services = (Services);
+;// CONCATENATED MODULE: ./src/history.js
+class History {
+  constructor() {
+    this.history = this.getHistory();
+  }
+  getHistory() {
+    let history = null;
+    try {
+      history = JSON.parse(localStorage.getItem('history'));
+    } catch (err) {
+      // pass
+    }
+    return history || {};
+  }
+  get(key) {
+    return Promise.resolve().then(() => {
+      let result = null;
+
+      const now = Math.trunc(Date.now() / 1000);
+      const item = this.history[key];
+      if (item && item.expire > now) {
+        result = item.data;
+      }
+
+      return result;
+    });
+  }
+  set(key, value) {
+    return Promise.resolve().then(() => {
+      const history = this.history;
+
+      const now = Math.trunc(Date.now() / 1000);
+      Object.keys(history).forEach(function (key) {
+        const item = history[key];
+        if (item.expire < now) {
+          delete history[key];
+        }
+      });
+
+      history[key] = {expire: now + 86400, data: value};
+
+      localStorage.setItem('history', JSON.stringify(history));
+    });
+  }
+}
+
+/* harmony default export */ const src_history = (History);
+;// CONCATENATED MODULE: ./src/index.js
+
+
+
+
+const src_debug = console.error.bind(console, 'app:index');
+
+class Index {
+  constructor() {
+    this.history = null;
+    this.transport = null;
+    this.services = null;
+    this.callFn = null;
+    this.init();
+  }
+  init() {
+    this.history = new src_history();
+    this.services = new services();
+    this.transport = new transport({
+      postMessage: function (msg) {
+        parent.postMessage(JSON.stringify(msg), '*');
+      },
+      onMessage: function (cb) {
+        window.onmessage = function (e) {
+          cb(JSON.parse(e.data));
+        };
+      }
+    }, this.api);
+    this.callFn = this.transport.callFn.bind(this.transport);
+    this.callFn('ready');
+  }
+  async onGetLink(info, items) {
+    let item;
+    if (!Array.isArray(items)) {
+      item = items;
+    } else {
+      const keys = items.map(i => i.title);
+      item = await this.callFn('choose', [{
+        title: 'Choose link',
+        list: keys
+      }]).then((index) => {
+        if (typeof index === "number") {
+          return items[index];
+        } else {
+          return null;
+        }
+      });
+    }
+
+    if (!item) {
+      this.callFn('setStatus', [`Empty choose`]);
+      return;
+    }
+
+    this.callFn('setStatus', [`${info.type}: ${item.quality ? 'Found ' + item.quality : 'Found!'}`]);
+
+    this.callFn('openUrl', [{
+      url: item.url,
+      mime: item.mime
+    }]);
+  }
+  getInfo(url) {
+    return Promise.resolve().then(() => {
+      const services = Object.keys(this.services);
+      const next = () => {
+        const name = services.shift();
+        if (!name) {
+          throw new Error('Service is not found');
+        }
+        return Promise.resolve().then(() => {
+          return this.services[name].getInfo(url);
+        }).then(info => {
+          if (info) {
+            return info;
+          } else {
+            return next();
+          }
+        }, err => {
+          src_debug(`getInfo error ${name}`, err);
+          return next();
+        });
+      };
+      return next();
+    });
+  }
+  get api() {
+    return {
+      getVideoLink: url => {
+        return this.getInfo(url).then(info => {
+          this.callFn('setStatus', ['Service: ' + info.type]);
+
+          return this.history.get(JSON.stringify(info)).then(links => {
+            if (links) {
+              return this.callFn('confirm', [{
+                message: 'Open link from history?'
+              }]).then(result => {
+                if (result) {
+                  return links;
+                } else {
+                  return null;
+                }
+              });
+            }
+          }).then(links => {
+            if (!links) {
+              this.callFn('setStatus', [`${info.type}: Request links`]);
+              return this.services[info.type].getLinks(info).then(links => {
+                this.history.set(JSON.stringify(info), links);
+                return links;
+              });
+            } else {
+              return links;
+            }
+          }).then(links => {
+            return this.onGetLink(info, links);
+          });
+        }).catch(err => {
+          this.callFn('setStatus', [`Error: ${err.message}`]);
+        });
+      }
+    }
+  }
+}
+
+/* harmony default export */ const src = (window.app = new Index());
+
+})();
+
+/******/ })()
+;
